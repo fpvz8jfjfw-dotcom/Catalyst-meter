@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Burnout Meter 🔥</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div>
+    <div class="eyebrow">FIREMNÍ SYSTÉM PRO MĚŘENÍ UTRPENÍ</div>
+    <h1>🔥 BURNOUT METER</h1>
+    <p>Od „dneska to půjde“ až po „zaměstnanec.exe přestal odpovídat“.</p>
+  </div>
+  <div class="datebox">
+    <label>Datum</label>
+    <input id="date" type="date">
+  </div>
+</header>
+
+<main>
+<section class="hero-grid">
+  <div class="card score-card">
+    <span class="muted">DNES • TÝM</span>
+    <div id="teamScore" class="big">—</div>
+    <div id="teamText" class="burnout-text">Zatím se měříme...</div>
+  </div>
+  <div class="card">
+    <span class="muted">AKTUÁLNÍ HODINA</span>
+    <div id="currentHour" class="big small">—</div>
+    <div id="hourText" class="burnout-text">Zadejte hodnoty.</div>
+  </div>
+  <div class="card winner">
+    <span class="muted">DNEŠNÍ VÍTĚZ</span>
+    <div id="winner" class="winner-name">—</div>
+    <div class="burnout-text">Nejvyšší průměr vyhoření</div>
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-title">
+    <div><h2>Dnešní stav</h2><span>Každý zaměstnanec může u každé hodiny zadat 1–10.</span></div>
+    <button id="todayBtn" class="ghost">Dnes</button>
+  </div>
+  <div class="table-wrap">
+    <table id="meter"></table>
+  </div>
+</section>
+
+<section class="card">
+  <div class="section-title">
+    <div><h2>📈 Vývoj během dne</h2><span>Průměr celého týmu podle hodin.</span></div>
+  </div>
+  <canvas id="chart" width="1000" height="330"></canvas>
+</section>
+
+<section class="card">
+  <div class="section-title">
+    <div><h2>🏆 Roční vyhodnocení</h2><span>Vítězí zaměstnanec s nejvyšším průměrem vyhoření.</span></div>
+    <select id="year"></select>
+  </div>
+  <div id="leaderboard" class="leaderboard"></div>
+</section>
+
+<section class="card archive">
+  <h2>🎖️ Tituly</h2>
+  <div class="badges">
+    <div>🔥 <b>Burnout Champion</b><span>Nejvyšší roční průměr</span></div>
+    <div>☠️ <b>Systémový kolaps</b><span>Nejvyšší jednotlivá hodnota</span></div>
+    <div>🌱 <b>Zen Master</b><span>Nejnižší roční průměr</span></div>
+    <div>☕ <b>Kofeinový válečník</b><span>Nejvyšší průměr do 9:00</span></div>
+  </div>
+</section>
+</main>
+<footer>Burnout Meter • 2026 • Protože KPI nestačí.</footer>
+<script src="app.js"></script>
+</body>
+</html>
