@@ -1,48 +1,54 @@
 import { createClient } from "@supabase/supabase-js";
 
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+
 const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
+  SUPABASE_URL,
+  SUPABASE_ANON_KEY
 );
 
-const employees = [
+// ===============================
+// PRACOVNÍ LIGA
+// ===============================
+
+const EMPLOYEES = [
   "Adam Juda",
   "Michal Mourek",
   "Martin Strejček",
   "Ladislav Čihák"
 ];
 
-const hours = [6, 7, 8, 9, 10, 11, 12, 13, 14];
+const HOURS = [6, 7, 8, 9, 10, 11, 12, 13, 14];
 
-let readings = [];
+let ratings = [];
 
-const $ = id => document.getElementById(id);
-const pad = n => String(n).padStart(2, "0");
+const dateInput = document.getElementById("date");
+const table = document.getElementById("ratings");
+const status = document.getElementById("status");
+const leaderboard = document.getElementById("leaderboard");
 
-const today = () => {
+function today() {
   const d = new Date();
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-};
 
-const burnoutText = v => {
-  if (v == null) return "Zatím se měříme...";
-  if (v < 3) return "Jsem čerstvý, dneska to půjde.";
-  if (v < 5) return "Začínám chápat, proč tu máme kafe.";
-  if (v < 7) return "Potřebuju pauzu. A možná změnit kariéru.";
-  if (v < 9) return "Jsem fyzicky přítomen, mentálně na dovolené.";
-  if (v < 10) return "Systém zaměstnanec.exe přestává odpovídat.";
-  return "☠️ Systém zaměstnanec.exe přestal odpovídat.";
-};
-
-function val(emp, date, hour) {
-  return readings.find(
-    x => x.employee === emp &&
-         x.date === date &&
-         x.hour === hour
-  )?.value;
+  return (
+    d.getFullYear() +
+    "-" +
+    String(d.getMonth() + 1).padStart(2, "0") +
+    "-" +
+    String(d.getDate()).padStart(2, "0")
+  );
 }
 
-async function load() {
+dateInput.value = today();
+
+// ===============================
+// NAČTENÍ DAT
+// ===============================
+
+async function loadRatings() {
+  status.textContent = "Načítám data…";
+
   const { data, error } = await supabase
     .from("ratings")
     .select("*")
@@ -50,352 +56,285 @@ async function load() {
     .order("hour", { ascending: true });
 
   if (error) {
-    console.error(error);
-    alert("Nepodařilo se načíst data ze Supabase.");
+    console.error("SUPABASE LOAD ERROR:", error);
+
+    status.textContent =
+      "❌ Nepodařilo se načíst data ze Supabase.";
+
+    alert(
+      "Chyba Supabase při načítání:\n\n" +
+      error.message +
+      "\n\n" +
+      (error.details || "") +
+      "\n\n" +
+      (error.hint || "")
+    );
+
     return;
   }
 
-  readings = data.map(x => ({
-    id: x.id,
-    employee: x.person,
-    date: x.date,
-    hour: x.hour,
-    value: x.score
-  }));
+  ratings = data || [];
 
-  render($("date").value);
+  status.textContent = "✅ Data načtena";
+
+  render();
 }
 
-async function setVal(emp, date, hour, value) {
-  const existing = readings.find(
-    x => x.employee === emp &&
-         x.date === date &&
-         x.hour === hour
-  );
+// ===============================
+// VYKRESLENÍ TABULKY
+// ===============================
 
-  let error;
+function render() {
+  const date = dateInput.value;
 
-  if (existing) {
-    const result = await supabase
-      .from("ratings")
-      .update({
-        score: value,
-        year: Number(date.slice(0, 4))
-      })
-      .eq("id", existing.id);
+  let html = `
+    <table>
+      <thead>
+        <tr>
+          <th>Zaměstnanec</th>
+          ${HOURS.map(h => `<th>${h}:00</th>`).join("")}
+        </tr>
+      </thead>
 
-    error = result.error;
-  } else {
-    const result = await supabase
-      .from("ratings")
-      .insert({
-        year: Number(date.slice(0, 4)),
-        person: emp,
-        score: value,
-        date,
-        hour
-      });
+      <tbody>
+  `;
 
-    error = result.error;
-  if (error) {
-  console.error(error);
-  alert(
-    "CHYBA SUPABASE:\n\n" +
-    "message: " + error.message + "\n\n" +
-    "details: " + error.details + "\n\n" +
-    "hint: " + error.hint
-  );
-  return;
-}
+  for (const employee of EMPLOYEES) {
+    html += `<tr>`;
 
-  await load();
-}
+    html += `
+      <td class="employee">
+        ${employee}
+      </td>
+    `;
 
-function render(date) {
-  let html =
-    "<thead><tr><th>Zaměstnanec</th>" +
-    hours.map(h => `<th>${pad(h)}:00</th>`).join("") +
-    "</tr></thead><tbody>";
+    for (const hour of HOURS) {
+      const rating = ratings.find(
+        r =>
+          r.person === employee &&
+          r.date === date &&
+          Number(r.hour) === hour
+      );
 
-  employees.forEach(emp => {
-    html += `<tr><td class="name">${emp}</td>`;
-
-    hours.forEach(hour => {
-      const value = val(emp, date, hour);
-
-      const current =
-        new Date().getHours() === hour && date === today()
-          ? " current"
-          : "";
+      const value = rating ? rating.score : "";
 
       html += `
         <td>
           <button
-            class="cell${current}${value == null ? " empty" : ""}"
-            onclick="choose('${emp.replace(/'/g, "\\'")}','${date}',${hour})"
+            class="rating rating-${value || "empty"}"
+            data-person="${employee}"
+            data-hour="${hour}"
           >
-            ${value ?? "—"}
+            ${value || "—"}
           </button>
         </td>
       `;
+    }
+
+    html += `</tr>`;
+  }
+
+  html += `
+      </tbody>
+    </table>
+  `;
+
+  table.innerHTML = html;
+
+  document
+    .querySelectorAll(".rating")
+    .forEach(button => {
+      button.addEventListener("click", () => {
+        const person = button.dataset.person;
+        const hour = Number(button.dataset.hour);
+
+        enterRating(person, hour);
+      });
     });
 
-    html += "</tr>";
-  });
-
-  $("meter").innerHTML = html;
-
-  const vals = employees
-    .flatMap(e => hours.map(h => val(e, date, h)))
-    .filter(v => v != null);
-
-  const avg = vals.length
-    ? vals.reduce((a, b) => a + b, 0) / vals.length
-    : null;
-
-  $("teamScore").textContent =
-    avg != null ? avg.toFixed(1) + "/10" : "—";
-
-  $("teamText").textContent = burnoutText(avg);
-
-  const currentHour = new Date().getHours();
-
-  $("currentHour").textContent =
-    hours.includes(currentHour)
-      ? pad(currentHour) + ":00"
-      : "Mimo pracovní dobu";
-
-  const currentValues = hours.includes(currentHour)
-    ? employees
-        .map(e => val(e, date, currentHour))
-        .filter(v => v != null)
-    : [];
-
-  $("hourText").textContent = currentValues.length
-    ? burnoutText(
-        currentValues.reduce((a, b) => a + b, 0) /
-        currentValues.length
-      )
-    : "Zadejte hodnoty.";
-
-  const avgs = employees
-    .map(e => {
-      const values = hours
-        .map(h => val(e, date, h))
-        .filter(v => v != null);
-
-      return {
-        e,
-        avg: values.length
-          ? values.reduce((a, b) => a + b, 0) / values.length
-          : null
-      };
-    })
-    .filter(x => x.avg != null)
-    .sort((a, b) => b.avg - a.avg);
-
-  $("winner").textContent = avgs[0]?.e || "—";
-
-  drawChart(date);
-  renderYear();
+  renderLeaderboard();
 }
 
-async function choose(emp, date, hour) {
-  const old = val(emp, date, hour);
+// ===============================
+// ZADÁNÍ HODNOCENÍ
+// ===============================
 
-  const input = prompt(
-    `${emp} • ${pad(hour)}:00\n` +
-    `Míra vyhoření 1–10${old ? ` (aktuálně ${old})` : ""}\n\n` +
-    `1 = úplná pohoda\n` +
-    `10 = zaměstnanec.exe přestal odpovídat`,
-    old ?? ""
+async function enterRating(person, hour) {
+  const date = dateInput.value;
+
+  const existing = ratings.find(
+    r =>
+      r.person === person &&
+      r.date === date &&
+      Number(r.hour) === hour
   );
 
-  if (input === null) return;
+  const current = existing ? existing.score : "";
 
-  const value = Math.round(Number(input));
+  const input = prompt(
+    `${person}\n${hour}:00\n\n` +
+    `Míra vyhoření 1–10\n\n` +
+    `1 = úplná pohoda\n` +
+    `5 = už toho mám dost\n` +
+    `10 = zaměstnanec.exe přestal odpovídat`,
+    current
+  );
 
-  if (
-    !Number.isInteger(value) ||
-    value < 1 ||
-    value > 10
-  ) {
-    alert("Zadej číslo od 1 do 10.");
+  if (input === null) {
     return;
   }
 
-  await setVal(emp, date, hour, value);
-}
+  const score = Number(input);
 
-window.choose = choose;
-
-function drawChart(date) {
-  const canvas = $("chart");
-
-  if (!canvas) return;
-
-  const ctx = canvas.getContext("2d");
-  const dpr = window.devicePixelRatio || 1;
-  const width = canvas.clientWidth;
-  const height = 330;
-
-  canvas.width = width * dpr;
-  canvas.height = height * dpr;
-
-  ctx.scale(dpr, dpr);
-  ctx.clearRect(0, 0, width, height);
-
-  const averages = hours.map(hour => {
-    const values = employees
-      .map(e => val(e, date, hour))
-      .filter(v => v != null);
-
-    return values.length
-      ? values.reduce((a, b) => a + b, 0) / values.length
-      : null;
-  });
-
-  const padL = 45;
-  const padR = 20;
-  const padT = 20;
-  const padB = 40;
-
-  const plotWidth = width - padL - padR;
-  const plotHeight = height - padT - padB;
-
-  ctx.strokeStyle = "#ddd";
-  ctx.fillStyle = "#777";
-  ctx.font = "12px system-ui";
-
-  for (let y = 1; y <= 10; y++) {
-    const yy =
-      padT +
-      plotHeight -
-      ((y - 1) / 9) * plotHeight;
-
-    ctx.beginPath();
-    ctx.moveTo(padL, yy);
-    ctx.lineTo(width - padR, yy);
-    ctx.stroke();
-
-    ctx.fillText(y, padL - 25, yy + 4);
+  if (!Number.isInteger(score) || score < 1 || score > 10) {
+    alert("Zadej celé číslo od 1 do 10.");
+    return;
   }
 
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = 3;
-  ctx.beginPath();
+  status.textContent = "Ukládám…";
 
-  let started = false;
+  const payload = {
+    year: Number(date.substring(0, 4)),
+    person: person,
+    score: score,
+    date: date,
+    hour: hour
+  };
 
-  averages.forEach((value, i) => {
-    if (value == null) {
-      started = false;
-      return;
-    }
+  let result;
 
-    const x =
-      padL +
-      i * (plotWidth / (hours.length - 1));
+  if (existing) {
+    result = await supabase
+      .from("ratings")
+      .update(payload)
+      .eq("id", existing.id);
+  } else {
+    result = await supabase
+      .from("ratings")
+      .insert(payload);
+  }
 
-    const y =
-      padT +
-      plotHeight -
-      ((value - 1) / 9) * plotHeight;
+  if (result.error) {
+    console.error("SUPABASE SAVE ERROR:", result.error);
 
-    if (!started) {
-      ctx.moveTo(x, y);
-      started = true;
-    } else {
-      ctx.lineTo(x, y);
-    }
-  });
-
-  ctx.stroke();
-
-  ctx.fillStyle = "#111";
-
-  hours.forEach((hour, i) => {
-    const x =
-      padL +
-      i * (plotWidth / (hours.length - 1));
-
-    ctx.fillText(
-      pad(hour) + ":00",
-      x - 15,
-      height - 12
+    alert(
+      "❌ Chyba při ukládání:\n\n" +
+      result.error.message +
+      "\n\n" +
+      (result.error.details || "") +
+      "\n\n" +
+      (result.error.hint || "")
     );
-  });
+
+    status.textContent = "❌ Chyba při ukládání";
+
+    return;
+  }
+
+  status.textContent = "✅ Uloženo";
+
+  await loadRatings();
 }
 
-function renderYear() {
-  const year = Number($("year").value);
+// ===============================
+// LEADERBOARD
+// ===============================
 
-  const rows = readings.filter(
-    x => x.date?.startsWith(year + "-")
+function renderLeaderboard() {
+  const selectedYear =
+    Number(dateInput.value.substring(0, 4));
+
+  const yearRatings = ratings.filter(
+    r =>
+      Number(r.year) === selectedYear &&
+      EMPLOYEES.includes(r.person)
   );
 
-  const stats = employees
-    .map(employee => {
-      const values = rows
-        .filter(x => x.employee === employee)
-        .map(x => x.value);
+  const results = EMPLOYEES.map(person => {
+    const values = yearRatings
+      .filter(r => r.person === person)
+      .map(r => Number(r.score))
+      .filter(v => Number.isFinite(v));
 
+    if (!values.length) {
       return {
-        e: employee,
-        n: values.length,
-        avg: values.length
-          ? values.reduce((a, b) => a + b, 0) / values.length
-          : null
+        person,
+        average: null,
+        count: 0
       };
+    }
+
+    const average =
+      values.reduce((a, b) => a + b, 0) /
+      values.length;
+
+    return {
+      person,
+      average,
+      count: values.length
+    };
+  });
+
+  results.sort((a, b) => {
+    if (a.average === null) return 1;
+    if (b.average === null) return -1;
+
+    return b.average - a.average;
+  });
+
+  leaderboard.innerHTML = results
+    .map((result, index) => {
+      const medal =
+        index === 0 ? "🥇" :
+        index === 1 ? "🥈" :
+        index === 2 ? "🥉" :
+        "🏅";
+
+      return `
+        <div class="leader">
+          <span class="medal">${medal}</span>
+
+          <strong>
+            ${result.person}
+          </strong>
+
+          <span>
+            ${
+              result.average === null
+                ? "zatím bez dat"
+                : result.average.toFixed(2) + " / 10"
+            }
+          </span>
+
+          <small>
+            ${result.count} měření
+          </small>
+        </div>
+      `;
     })
-    .filter(x => x.avg != null)
-    .sort((a, b) => b.avg - a.avg);
-
-  $("leaderboard").innerHTML = stats.length
-    ? stats
-        .map(
-          (x, i) => `
-            <div class="rank ${i === 0 ? "first" : ""}">
-              <strong>
-                ${["🥇", "🥈", "🥉", "4️⃣"][i] || ""}
-              </strong>
-
-              <span>
-                ${x.e}
-                <small style="display:block;color:#888">
-                  ${x.n} měření
-                </small>
-              </span>
-
-              <span class="avg">
-                ${x.avg.toFixed(2)} / 10
-              </span>
-            </div>
-          `
-        )
-        .join("")
-    : `<div class="muted">
-        Pro rok ${year} zatím nejsou data.
-       </div>`;
+    .join("");
 }
 
-$("date").value = today();
+// ===============================
+// ZMĚNA DATA
+// ===============================
 
-$("date").addEventListener("change", load);
+dateInput.addEventListener(
+  "change",
+  render
+);
 
-$("todayBtn").onclick = () => {
-  $("date").value = today();
-  load();
-};
+// ===============================
+// START
+// ===============================
 
-for (
-  let year = new Date().getFullYear();
-  year >= 2026;
-  year--
-) {
-  $("year").innerHTML += `<option>${year}</option>`;
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  status.textContent =
+    "❌ Chybí Supabase konfigurace.";
+
+  alert(
+    "Chybí VITE_SUPABASE_URL nebo VITE_SUPABASE_ANON_KEY."
+  );
+} else {
+  loadRatings();
 }
-
-$("year").addEventListener("change", renderYear);
-
-load();
