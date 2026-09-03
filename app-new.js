@@ -99,11 +99,16 @@ async function setVal(emp, date, hour, value) {
     error = result.error;
   }
 
-  if (error) {
-    console.error(error);
-    alert("Nepodařilo se uložit hodnocení.");
-    return;
-  }
+  ifif (error) {
+  console.error(error);
+  alert(
+    "CHYBA SUPABASE:\n\n" +
+    "message: " + error.message + "\n\n" +
+    "details: " + error.details + "\n\n" +
+    "hint: " + error.hint
+  );
+  return;
+}
 
   await load();
 }
