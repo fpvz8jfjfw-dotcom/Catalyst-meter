@@ -97,9 +97,7 @@ async function setVal(emp, date, hour, value) {
       });
 
     error = result.error;
-  }
-
-  ifif (error) {
+  if (error) {
   console.error(error);
   alert(
     "CHYBA SUPABASE:\n\n" +
