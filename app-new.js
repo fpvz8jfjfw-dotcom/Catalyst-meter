@@ -169,30 +169,28 @@ async function enterRating(person, hour) {
       Number(r.hour) === hour
   );
 
-  const current = existing ? existing.score : "";
+  let input;
 
-  const input = prompt(
-    `${person}\n${hour}:00\n\n` +
-    `Míra vyhoření 1–10\n\n` +
-    `1 = Dobře jedu\n` +
-    `2 = Jde to jako po másle\n` +
-    `3 = Dneska to feeluju\n` +
-    `4 = Nebudu tady dělat všechno, do piče\n` +
-    `5 = Dneska to necejtím\n` +
-    `6 = Děleeej, tak už to pískni\n` +
-    `7 = Nebudu to dělat\n` +
-    `8 = Dneska už netahám\n` +
-    `9 = Kávec a domů\n` +
-    `10 = TOTAL BURNOUT\n\n` +
-    (existing ? `Pro smazání napiš: smazat` : ``),
-    current
-  );
+  if (existing) {
+    input = prompt(
+      `${person}\n${hour}:00\n\n` +
+      `Aktuální hodnocení: ${existing.score}\n\n` +
+      `Zadej nové hodnocení 1–10\n` +
+      `nebo napiš "smazat" pro odstranění.`,
+      existing.score
+    );
+  } else {
+    input = prompt(
+      `${person}\n${hour}:00\n\n` +
+      `Míra vyhoření 1–10`,
+      ""
+    );
+  }
 
   if (input === null) {
     return;
   }
 
-  // SMAZÁNÍ EXISTUJÍCÍHO HODNOCENÍ
   if (existing && input.trim().toLowerCase() === "smazat") {
     status.textContent = "Mažu…";
 
@@ -205,12 +203,8 @@ async function enterRating(person, hour) {
       console.error("SUPABASE DELETE ERROR:", result.error);
 
       alert(
-        "❌ Chyba při mazání:\n\n" +
-        result.error.message +
-        "\n\n" +
-        (result.error.details || "") +
-        "\n\n" +
-        (result.error.hint || "")
+        "Chyba při mazání:\n\n" +
+        result.error.message
       );
 
       status.textContent = "❌ Chyba při mazání";
@@ -221,6 +215,7 @@ async function enterRating(person, hour) {
 
     status.textContent = "✅ Smazáno";
     render();
+
     return;
   }
 
@@ -258,12 +253,8 @@ async function enterRating(person, hour) {
     console.error("SUPABASE SAVE ERROR:", result.error);
 
     alert(
-      "❌ Chyba při ukládání:\n\n" +
-      result.error.message +
-      "\n\n" +
-      (result.error.details || "") +
-      "\n\n" +
-      (result.error.hint || "")
+      "Chyba při ukládání:\n\n" +
+      result.error.message
     );
 
     status.textContent = "❌ Chyba při ukládání";
@@ -274,6 +265,7 @@ async function enterRating(person, hour) {
 
   await loadRatings();
 }
+
 
 
   const score = Number(input);
