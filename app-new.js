@@ -174,9 +174,9 @@ async function enterRating(person, hour) {
   const input = prompt(
     `${person}\n${hour}:00\n\n` +
     `Míra vyhoření 1–10\n\n` +
-    `1 = úplná pohoda\n` +
-    `5 = už toho mám dost\n` +
-    `10 = zaměstnanec.exe přestal odpovídat`,
+    `1 = Dobře jedu\n` +
+    `5 = Dneska už netahám\n` +
+    `10 = Jsem vyhořelej`,
     current
   );
 
