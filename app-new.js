@@ -169,27 +169,32 @@ async function enterRating(person, hour) {
       Number(r.hour) === hour
   );
 
-  let input;
+  const current = existing ? existing.score : "";
 
-  if (existing) {
-    input = prompt(
-      `${person}\n${hour}:00\n\n` +
-      `Aktuální hodnocení: ${existing.score}\n\n` +
-      `Zadej nové hodnocení 1–10\n` +
-      `nebo napiš "smazat" pro odstranění.`,
-      existing.score
-    );
-  } else {
-    input = prompt(
-      `${person}\n${hour}:00\n\n` +
-      `Míra vyhoření 1–10`,
-      ""
-    );
-  }
+  const input = prompt(
+    `${person}\n${hour}:00\n\n` +
+    `Míra vyhoření 1–10\n\n` +
+    `1 = Dobře jedu\n` +
+    `2 = Jde to jako po másle\n` +
+    `3 = Dneska to feeluju\n` +
+    `4 = Nebudu tady dělat všechno, do piče\n` +
+    `5 = Dneska to necejtím\n` +
+    `6 = Děleeej, tak už to pískni\n` +
+    `7 = Nebudu to dělat\n` +
+    `8 = Dneska už netahám\n` +
+    `9 = Kávec a domů\n` +
+    `10 = TOTAL BURNOUT\n\n` +
+    (existing ? `Pro smazání napiš: smazat` : ""),
+    current
+  );
 
   if (input === null) {
     return;
   }
+
+  // ===============================
+  // SMAZÁNÍ HODNOCENÍ
+  // ===============================
 
   if (existing && input.trim().toLowerCase() === "smazat") {
     status.textContent = "Mažu…";
@@ -203,77 +208,47 @@ async function enterRating(person, hour) {
       console.error("SUPABASE DELETE ERROR:", result.error);
 
       alert(
-        "Chyba při mazání:\n\n" +
-        result.error.message
+        "❌ Chyba při mazání:\n\n" +
+        result.error.message +
+        "\n\n" +
+        (result.error.details || "") +
+        "\n\n" +
+        (result.error.hint || "")
       );
 
       status.textContent = "❌ Chyba při mazání";
       return;
     }
 
-    ratings = ratings.filter(r => r.id !== existing.id);
+    ratings = ratings.filter(
+      r => r.id !== existing.id
+    );
 
     status.textContent = "✅ Smazáno";
+
     render();
 
     return;
   }
 
+  // ===============================
+  // KONTROLA HODNOTY
+  // ===============================
+
   const score = Number(input);
 
   if (!Number.isInteger(score) || score < 1 || score > 10) {
-    alert("Zadej celé číslo od 1 do 10, nebo napiš smazat.");
-    return;
-  }
-
-  status.textContent = "Ukládám…";
-
-  const payload = {
-    year: Number(date.substring(0, 4)),
-    person: person,
-    score: score,
-    date: date,
-    hour: hour
-  };
-
-  let result;
-
-  if (existing) {
-    result = await supabase
-      .from("ratings")
-      .update(payload)
-      .eq("id", existing.id);
-  } else {
-    result = await supabase
-      .from("ratings")
-      .insert(payload);
-  }
-
-  if (result.error) {
-    console.error("SUPABASE SAVE ERROR:", result.error);
-
     alert(
-      "Chyba při ukládání:\n\n" +
-      result.error.message
+      "Zadej celé číslo od 1 do 10,\n" +
+      "nebo napiš „smazat“."
     );
 
-    status.textContent = "❌ Chyba při ukládání";
     return;
   }
 
-  status.textContent = "✅ Uloženo";
-
-  await loadRatings();
-}
-
-
-
-  const score = Number(input);
-
-  if (!Number.isInteger(score) || score < 1 || score > 10) {
-    alert("Zadej celé číslo od 1 do 10.");
-    return;
-  }
+  // ===============================
+  // UKLÁDÁNÍ
+  // ===============================
 
   status.textContent = "Ukládám…";
 
@@ -316,23 +291,10 @@ async function enterRating(person, hour) {
   }
 
   status.textContent = "✅ Uloženo";
-  const index = ratings.findIndex(
-  r =>
-    r.person === person &&
-    r.date === date &&
-    Number(r.hour) === hour
-);
-
-if (index !== -1) {
-  ratings[index] = { ...ratings[index], ...payload }; } else {
-  ratings.push(payload);
-}
-
-render();
-
 
   await loadRatings();
 }
+
 
 // ===============================
 // LEADERBOARD
