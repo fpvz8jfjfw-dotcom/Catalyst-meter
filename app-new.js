@@ -175,8 +175,15 @@ async function enterRating(person, hour) {
     `${person}\n${hour}:00\n\n` +
     `Míra vyhoření 1–10\n\n` +
     `1 = Dobře jedu\n` +
-    `5 = Dneska už netahám\n` +
-    `10 = Jsem vyhořelej`,
+    `2 = Jde to jako po másle\n` +
+    `3 = Dneska to feeluju\n` +
+    `4 = Nebudu tady dělat všechno, do piče\n` +
+    `5 = Dneska to necejtím\n` +
+    `6 = Děleeej, tak už to pískni\n` +
+    `7 = Nebudu to dělat\n` +
+    `8 = Dneska už netahám\n` +
+    `9 = Kávec a domů\n` +
+    `10 = TOTAL BURNOUT`,
     current
   );
 
