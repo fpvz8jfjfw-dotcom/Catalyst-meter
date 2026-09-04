@@ -239,6 +239,20 @@ async function enterRating(person, hour) {
   }
 
   status.textContent = "✅ Uloženo";
+  const index = ratings.findIndex(
+  r =>
+    r.person === person &&
+    r.date === date &&
+    Number(r.hour) === hour
+);
+
+if (index !== -1) {
+  ratings[index] = { ...ratings[index], ...payload }; } else {
+  ratings.push(payload);
+}
+
+render();
+
 
   await loadRatings();
 }
