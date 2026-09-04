@@ -323,12 +323,12 @@ async function enterRating(
 
     `1 = Dobře jedu\n` +
     `2 = Jde to jako po másle\n` +
-    `3 = Dneska to feeluju\n` +
-    `4 = Nebudu tady dělat všechno, do piče\n` +
+    `3 = Nebudu tady dělat všechno, do piče\n` +
+    `4 = Dělěj zacukruj\n` +
     `5 = Dneska to necejtím\n` +
-    `6 = Děleeej, tak už to pískni\n` +
-    `7 = Nebudu to dělat\n` +
-    `8 = Dneska už netahám\n` +
+    `6 = Nebudu to dělat, kurva uuuž\n` +
+    `7 = Děleeej, tak už to pískni\n` +
+    `8 = Dneska netahám\n` +
     `9 = Kávec a domů\n` +
     `10 = TOTAL BURNOUT\n\n` +
 
