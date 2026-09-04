@@ -2,282 +2,193 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Catalyst burnout 🔥</title>
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+  <title>Pracovní liga 🔥</title>
 
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f4f4f4;
-      color: #171717;
-    }
-
-    header {
-      background: #171717;
-      color: white;
-      padding: 35px 20px;
-    }
-
-    header-inner {
-      display: block;
-      max-width: 1200px;
-      margin: auto;
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 42px;
-    }
-
-    header p {
-      color: #aaa;
-      margin-top: 8px;
-    }
-
-    main {
-      max-width: 1200px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    .controls {
-      background: white;
-      padding: 18px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      display: flex;
-      align-items: center;
-      gap: 15px;
-      flex-wrap: wrap;
-    }
-
-    .controls label {
-      font-weight: bold;
-    }
-
-    input[type="date"] {
-      padding: 10px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 16px;
-    }
-
-    #status {
-      color: #666;
-      font-size: 14px;
-    }
-
-    .card {
-      background: white;
-      border-radius: 12px;
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: 0 2px 10px rgba(0,0,0,.05);
-    }
-
-    h2 {
-      margin-top: 0;
-    }
-
-    .table-wrapper {
-      overflow-x: auto;
-    }
-
-    table {
-      border-collapse: separate;
-      border-spacing: 5px;
-      width: 100%;
-      min-width: 850px;
-    }
-
-    th {
-      color: #777;
-      font-size: 13px;
-      padding: 8px;
-    }
-
-    td {
-      padding: 0;
-    }
-
-    .employee {
-      font-weight: bold;
-      white-space: nowrap;
-      padding: 12px;
-      background: #f1f1f1;
-      border-radius: 8px;
-    }
-
-    .rating {
-      width: 65px;
-      height: 52px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      background: white;
-      cursor: pointer;
-      font-size: 17px;
-      font-weight: bold;
-      transition: .15s;
-    }
-
-    .rating:hover {
-      transform: scale(1.05);
-    }
-
-    .rating-empty {
-      color: #aaa;
-    }
-
-    .rating-1,
-    .rating-2,
-    .rating-3 {
-      background: #e5f6e8;
-    }
-
-    .rating-4,
-    .rating-5,
-    .rating-6 {
-      background: #fff2cc;
-    }
-
-    .rating-7,
-    .rating-8 {
-      background: #ffe0d5;
-    }
-
-    .rating-9,
-    .rating-10 {
-      background: #ffcaca;
-    }
-
-    .leaderboard {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    .leader {
-      display: grid;
-      grid-template-columns: 45px 1fr 130px 100px;
-      align-items: center;
-      gap: 10px;
-      padding: 15px;
-      background: #f5f5f5;
-      border-radius: 9px;
-    }
-
-    .leader:first-child {
-      background: #fff0b8;
-    }
-
-    .medal {
-      font-size: 24px;
-    }
-
-    .leader span:nth-child(3) {
-      text-align: right;
-      font-weight: bold;
-    }
-
-    .leader small {
-      color: #777;
-    }
-
-    .legend {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-    }
-
-    .legend div {
-      padding: 15px;
-      border-radius: 8px;
-      background: #f4f4f4;
-    }
-
-    footer {
-      text-align: center;
-      color: #888;
-      padding: 30px;
-    }
-
-    @media (max-width: 700px) {
-      h1 {
-        font-size: 32px;
-      }
-
-      .leader {
-        grid-template-columns: 40px 1fr;
-      }
-
-      .leader span:nth-child(3),
-      .leader small {
-        grid-column: 2;
-        text-align: left;
-      }
-
-      .legend {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <link
+    rel="stylesheet"
+    href="/style.css"
+  >
 </head>
 
 <body>
 
 <header>
-  <header-inner>
-    <h1>🔥 CATALYST BURNOUT METER</h1>
+
+  <div>
+    <div class="eyebrow">
+      CATALYST • PRACOVNÍ LIGA
+    </div>
+
+    <h1>
+      🔥 CATALYST BURNOUT METER
+    </h1>
+
     <p>
       Od „Dobře jedu“ až po
-      „Jsem vyhořelej“.
+      „Jsem úplně vyhořelej“.
     </p>
-  </header-inner>
-</header>
+  </div>
 
-<main>
+  <div class="datebox">
 
-  <div class="controls">
-    <label for="date">Datum:</label>
+    <label for="date">
+      DATUM MĚŘENÍ
+    </label>
 
     <input
       id="date"
       type="date"
     >
 
-    <span id="status">
-      Připravuji aplikaci…
-    </span>
   </div>
 
-  <section class="card">
+</header>
 
-    <h2>📊 Dnešní měření</h2>
 
-    <p>
-      Klikni na políčko a zadej míru vyhoření od
-      <strong>1 do 10</strong>.
-    </p>
+<main>
 
-    <div class="table-wrapper">
-      <div id="ratings"></div>
+  <!-- STATUS -->
+
+  <section class="card status-card">
+
+    <div class="status-line">
+
+      <strong>
+        Stav ligy
+      </strong>
+
+      <span id="status">
+        Připravuji aplikaci…
+      </span>
+
     </div>
 
   </section>
 
+
+  <!-- HLÁŠKA -->
+
+  <section
+    id="messageBox"
+    class="card message-card"
+  >
+    <strong>
+      🔥 Dnešní hláška
+    </strong>
+
+    <span>
+      Zatím žádné hodnocení.
+    </span>
+  </section>
+
+
+  <!-- ROČNÍ STATISTIKY -->
+
+  <section class="hero-grid">
+
+    <div class="card">
+
+      <div class="muted">
+        ROČNÍ STATISTIKY
+      </div>
+
+      <div
+        id="yearStats"
+        class="stats"
+      ></div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="muted">
+        AKTUÁLNÍ VÍTĚZ
+      </div>
+
+      <div
+        id="currentWinner"
+        class="winner-name"
+      >
+        🏆 Pracuje se na tom…
+      </div>
+
+    </div>
+
+    <div class="card">
+
+      <div class="muted">
+        EXPORT
+      </div>
+
+      <p>
+        Stáhni kompletní data ligy
+        do Excelu / CSV.
+      </p>
+
+      <button
+        id="exportCsv"
+        class="ghost"
+      >
+        📥 Exportovat CSV
+      </button>
+
+    </div>
+
+  </section>
+
+
+  <!-- DNEŠNÍ TABULKA -->
+
   <section class="card">
 
-    <h2>🏆 Roční pořadí</h2>
+    <div class="section-title">
 
-    <p>
-      Vyšší průměr = větší pracovní utrpení = větší šance na titul.
-    </p>
+      <div>
+        <h2>
+          📊 Dnešní měření
+        </h2>
+
+        <span>
+          Klikni na políčko a zadej
+          nebo přepiš hodnocení 1–10.
+        </span>
+      </div>
+
+    </div>
+
+    <div class="table-wrap">
+
+      <div id="ratings"></div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ROČNÍ POŘADÍ -->
+
+  <section class="card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>
+          🏆 Roční pořadí
+        </h2>
+
+        <span>
+          Vyšší průměr =
+          větší pracovní utrpení.
+        </span>
+      </div>
+
+    </div>
 
     <div
       id="leaderboard"
@@ -286,25 +197,116 @@
 
   </section>
 
+
+  <!-- POROVNÁNÍ -->
+
   <section class="card">
 
-    <h2>📖 Jak se hodnotí?</h2>
-
-    <div class="legend">
+    <div class="section-title">
 
       <div>
-        😎 <strong>1–3</strong><br>
-        Dobře jedu
+        <h2>
+          ⚔️ Porovnání hráčů
+        </h2>
+
+        <span>
+          Kdo letos trpí nejvíc?
+        </span>
+      </div>
+
+    </div>
+
+    <div
+      id="comparison"
+      class="comparison"
+    ></div>
+
+  </section>
+
+
+  <!-- GRAF -->
+
+  <section class="card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>
+          📈 Vývoj vyhoření
+        </h2>
+
+        <span>
+          Průměrné denní skóre
+          za vybraný rok.
+        </span>
+      </div>
+
+    </div>
+
+    <div class="chart-wrap">
+
+      <canvas
+        id="burnoutChart"
+        width="1000"
+        height="330"
+      ></canvas>
+
+    </div>
+
+  </section>
+
+
+  <!-- LEGEND -->
+
+  <section class="card">
+
+    <div class="section-title">
+
+      <div>
+        <h2>
+          📖 Jak se hodnotí?
+        </h2>
+
+        <span>
+          Jednoduché pravidlo:
+          čím vyšší číslo, tím větší utrpení.
+        </span>
+      </div>
+
+    </div>
+
+    <div class="badges">
+
+      <div>
+        😎
+        <b>1–3</b>
+        <span>
+          Dobře jedu
+        </span>
       </div>
 
       <div>
-        😐 <strong>4–6</strong><br>
-        Dneska netahám
+        😐
+        <b>4–6</b>
+        <span>
+          Začíná to bolet
+        </span>
       </div>
 
       <div>
-        ☠️ <strong>7–10</strong><br>
-        Jsem vyhořelej
+        🔥
+        <b>7–8</b>
+        <span>
+          Dneska už netahám
+        </span>
+      </div>
+
+      <div>
+        ☠️
+        <b>9–10</b>
+        <span>
+          TOTAL BURNOUT
+        </span>
       </div>
 
     </div>
@@ -313,11 +315,15 @@
 
 </main>
 
-<footer>
-  Catalyst burnout 🔥 • Tahačka meter.
-</footer>
 
-<script type="module" src="/app-new.js"></script>
+<footer>
+  Pracovní liga 🔥 • Catalyst Burnout Meter </footer>
+
+
+<script
+  type="module"
+  src="/app-new.js"
+></script>
 
 </body>
 </html>
