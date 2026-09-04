@@ -22,6 +22,14 @@ const EMPLOYEES = [
 const HOURS = [
   5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 ];
 
+// Každý hráč má vlastní barvu
+const PLAYER_COLORS = {
+  "Adam Juda": "#2563eb",
+  "Michal Mourek": "#dc2626",
+  "Martin Strejček": "#16a34a",
+  "Ladislav Čihák": "#9333ea"
+};
+
 let ratings = [];
 
 // =====================================================
@@ -764,6 +772,9 @@ function renderComparison() {
               )
             );
 
+          const color =
+            PLAYER_COLORS[result.person];
+
           return `
 
             <div class="compare-row">
@@ -771,6 +782,13 @@ function renderComparison() {
               <div class="compare-head">
 
                 <strong>
+                  <span
+                    class="player-dot"
+                    style="
+                      background:${color};
+                    "
+                  ></span>
+
                   ${index + 1}.
                   ${result.person}
                 </strong>
@@ -785,7 +803,10 @@ function renderComparison() {
 
                 <div
                   class="bar-fill"
-                  style="width:${width}%"
+                  style="
+                    width:${width}%;
+                    background:${color};
+                  "
                 ></div>
 
               </div>
@@ -881,7 +902,7 @@ function renderMessage() {
 }
 
 // =====================================================
-// GRAF
+// GRAF – VÝVOJ VYHOŘENÍ
 // =====================================================
 
 function renderChart() {
@@ -896,12 +917,29 @@ function renderChart() {
   const year =
     getSelectedYear();
 
-  const days = {};
+  // Vyčistíme celý graf
+  ctx.clearRect(
+    0,
+    0,
+    chartCanvas.width,
+    chartCanvas.height
+  );
+
+  // ===================================================
+  // PŘÍPRAVA DAT PRO KAŽDÉHO HRÁČE
+  // ===================================================
+
+  const playerData = {};
+
+  EMPLOYEES.forEach(person => {
+    playerData[person] = {};
+  });
 
   ratings
     .filter(
       r =>
-        Number(r.year) === year
+        Number(r.year) === year &&
+        EMPLOYEES.includes(r.person)
     )
     .forEach(r => {
 
@@ -912,52 +950,42 @@ function renderChart() {
         return;
       }
 
-      if (!days[r.date]) {
-        days[r.date] = [];
+      if (!playerData[r.person][r.date]) {
+        playerData[r.person][r.date] = [];
       }
 
-      days[r.date].push(score);
+      playerData[r.person][r.date].push(score);
 
     });
 
-  const labels =
-    Object.keys(days)
-      .sort();
+  // Všechny dny, kdy existuje alespoň jedno hodnocení
+  const labels = [
+    ...new Set(
+      ratings
+        .filter(
+          r =>
+            Number(r.year) === year &&
+            EMPLOYEES.includes(r.person)
+        )
+        .map(r => r.date)
+    )
+  ].sort();
 
-  const values =
-    labels.map(date => {
-
-      const list =
-        days[date];
-
-      return (
-        list.reduce(
-          (sum, value) =>
-            sum + value,
-          0
-        ) /
-        list.length
-      );
-
-    });
-
-  ctx.clearRect(
-    0,
-    0,
-    chartCanvas.width,
-    chartCanvas.height
-  );
-
-  if (!values.length) {
+  if (!labels.length) {
 
     ctx.font =
       "16px system-ui";
+
+    ctx.fillStyle =
+      "#777777";
 
     ctx.fillText(
       "Zatím nejsou data pro graf.",
       20,
       40
     );
+
+    renderChartLegend();
 
     return;
   }
@@ -968,17 +996,24 @@ function renderChart() {
   const height =
     chartCanvas.height;
 
-  const padding = 45;
+  const paddingLeft = 45;
+  const paddingRight = 25;
+  const paddingTop = 25;
+  const paddingBottom = 40;
 
   const chartWidth =
     width -
-    padding * 2;
+    paddingLeft -
+    paddingRight;
 
   const chartHeight =
     height -
-    padding * 2;
+    paddingTop -
+    paddingBottom;
 
-  // OSA
+  // ===================================================
+  // OSY
+  // ===================================================
 
   ctx.strokeStyle =
     "#cccccc";
@@ -988,23 +1023,25 @@ function renderChart() {
   ctx.beginPath();
 
   ctx.moveTo(
-    padding,
-    padding
+    paddingLeft,
+    paddingTop
   );
 
   ctx.lineTo(
-    padding,
-    height - padding
+    paddingLeft,
+    height - paddingBottom
   );
 
   ctx.lineTo(
-    width - padding,
-    height - padding
+    width - paddingRight,
+    height - paddingBottom
   );
 
   ctx.stroke();
 
-  // MŘÍŽKA
+  // ===================================================
+  // MŘÍŽKA 1–10
+  // ===================================================
 
   for (
     let i = 1;
@@ -1014,9 +1051,12 @@ function renderChart() {
 
     const y =
       height -
-      padding -
-      ((i - 1) / 9) *
-        chartHeight;
+      paddingBottom -
+      (
+        (i - 1) /
+        9
+      ) *
+      chartHeight;
 
     ctx.strokeStyle =
       "#eeeeee";
@@ -1024,12 +1064,12 @@ function renderChart() {
     ctx.beginPath();
 
     ctx.moveTo(
-      padding,
+      paddingLeft,
       y
     );
 
     ctx.lineTo(
-      width - padding,
+      width - paddingRight,
       y
     );
 
@@ -1048,93 +1088,281 @@ function renderChart() {
     );
   }
 
-  // KŘIVKA
+  // ===================================================
+  // KŘIVKA KAŽDÉHO HRÁČE
+  // ===================================================
 
-  ctx.strokeStyle =
-    "#171717";
+  EMPLOYEES.forEach(person => {
 
-  ctx.lineWidth = 3;
+    const color =
+      PLAYER_COLORS[person];
 
-  ctx.beginPath();
+    const values =
+      labels.map(date => {
 
-  values.forEach(
-    (value, index) => {
+        const list =
+          playerData[person][date];
 
-      const x =
-        padding +
-        (
-          values.length === 1
-            ? chartWidth / 2
-            : (
-                index /
-                (values.length - 1)
-              ) *
-              chartWidth
+        if (
+          !list ||
+          !list.length
+        ) {
+          return null;
+        }
+
+        return (
+          list.reduce(
+            (sum, value) =>
+              sum + value,
+            0
+          ) /
+          list.length
         );
 
-      const y =
-        height -
-        padding -
-        (
-          (value - 1) /
-          9
-        ) *
-        chartHeight;
+      });
 
-      if (index === 0) {
-        ctx.moveTo(x, y);
-      } else {
-        ctx.lineTo(x, y);
+    ctx.strokeStyle =
+      color;
+
+    ctx.lineWidth = 3;
+
+    ctx.lineJoin =
+      "round";
+
+    ctx.lineCap =
+      "round";
+
+    let drawing = false;
+
+    values.forEach(
+      (value, index) => {
+
+        if (value === null) {
+          drawing = false;
+          return;
+        }
+
+        const x =
+          paddingLeft +
+          (
+            labels.length === 1
+              ? chartWidth / 2
+              : (
+                  index /
+                  (labels.length - 1)
+                ) *
+                chartWidth
+          );
+
+        const y =
+          height -
+          paddingBottom -
+          (
+            (value - 1) /
+            9
+          ) *
+          chartHeight;
+
+        if (!drawing) {
+
+          ctx.beginPath();
+
+          ctx.moveTo(
+            x,
+            y
+          );
+
+          drawing = true;
+
+        } else {
+
+          ctx.lineTo(
+            x,
+            y
+          );
+
+        }
+
+      }
+    );
+
+    if (drawing) {
+      ctx.stroke();
+    }
+
+    // =================================================
+    // BODY
+    // =================================================
+
+    values.forEach(
+      (value, index) => {
+
+        if (value === null) {
+          return;
+        }
+
+        const x =
+          paddingLeft +
+          (
+            labels.length === 1
+              ? chartWidth / 2
+              : (
+                  index /
+                  (labels.length - 1)
+                ) *
+                chartWidth
+          );
+
+        const y =
+          height -
+          paddingBottom -
+          (
+            (value - 1) /
+            9
+          ) *
+          chartHeight;
+
+        ctx.fillStyle =
+          color;
+
+        ctx.beginPath();
+
+        ctx.arc(
+          x,
+          y,
+          4,
+          0,
+          Math.PI * 2
+        );
+
+        ctx.fill();
+
+      }
+    );
+
+  });
+
+  // ===================================================
+  // POPISKY DATUMŮ
+  // ===================================================
+
+  ctx.fillStyle =
+    "#777777";
+
+  ctx.font =
+    "10px system-ui";
+
+  const maxLabels = 8;
+
+  const step =
+    Math.max(
+      1,
+      Math.ceil(
+        labels.length /
+        maxLabels
+      )
+    );
+
+  labels.forEach(
+    (date, index) => {
+
+      if (
+        index % step !== 0 &&
+        index !== labels.length - 1
+      ) {
+        return;
       }
 
-    }
-  );
-
-  ctx.stroke();
-
-  // BODY
-
-  values.forEach(
-    (value, index) => {
-
       const x =
-        padding +
+        paddingLeft +
         (
-          values.length === 1
+          labels.length === 1
             ? chartWidth / 2
             : (
                 index /
-                (values.length - 1)
+                (labels.length - 1)
               ) *
               chartWidth
         );
 
-      const y =
-        height -
-        padding -
-        (
-          (value - 1) /
-          9
-        ) *
-        chartHeight;
+      const shortDate =
+        date
+          .substring(5)
+          .replace("-", ".");
 
-      ctx.fillStyle =
-        "#171717";
-
-      ctx.beginPath();
-
-      ctx.arc(
-        x,
-        y,
-        4,
-        0,
-        Math.PI * 2
+      ctx.fillText(
+        shortDate,
+        x - 12,
+        height - 15
       );
-
-      ctx.fill();
 
     }
   );
+
+  renderChartLegend();
+}
+
+// =====================================================
+// LEGENDA KE GRAFU
+// =====================================================
+
+function renderChartLegend() {
+
+  const chartContainer =
+    chartCanvas?.parentElement;
+
+  if (!chartContainer) {
+    return;
+  }
+
+  let legend =
+    chartContainer.querySelector(
+      ".chart-legend"
+    );
+
+  if (!legend) {
+
+    legend =
+      document.createElement(
+        "div"
+      );
+
+    legend.className =
+      "chart-legend";
+
+    chartContainer.appendChild(
+      legend
+    );
+  }
+
+  legend.innerHTML =
+    EMPLOYEES
+      .map(person => {
+
+        const color =
+          PLAYER_COLORS[person];
+
+        return `
+
+          <div class="legend-player">
+
+            <span
+              class="legend-line"
+              style="
+                background:${color};
+              "
+            ></span>
+
+            <span>
+              ${person}
+            </span>
+
+          </div>
+
+        `;
+
+      })
+      .join("");
 }
 
 // =====================================================
