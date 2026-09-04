@@ -324,7 +324,7 @@ async function enterRating(
     `1 = Dobře jedu\n` +
     `2 = Jde to jako po másle\n` +
     `3 = Nebudu tady dělat všechno, do piče\n` +
-    `4 = Dělěj zacukruj\n` +
+    `4 = Dělej zacukruj\n` +
     `5 = Dneska to necejtím\n` +
     `6 = Nebudu to dělat, kurva uuuž\n` +
     `7 = Děleeej, tak už to pískni\n` +
