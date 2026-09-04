@@ -19,7 +19,7 @@ const EMPLOYEES = [
   "Ladislav Čihák"
 ];
 
-const HOURS = [5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
+const HOURS =;
 
 const PLAYER_COLORS = {
   "Adam Juda": "#2563eb",
@@ -177,7 +177,7 @@ async function loadRatings() {
   }
 
   ratings = data || [];
-  status.textContent = `🟢 Data načtena • \${ratings.length} měření`;
+  status.textContent = `🟢 Data načtena • ${ratings.length} měření`;
   render();
 }
 
@@ -209,7 +209,7 @@ function renderTable() {
       <thead>
         <tr>
           <th>Zaměstnanec</th>
-          \${HOURS.map(hour => `<th>\${hour}:00</th>`).join("")}
+          ${HOURS.map(hour => `<th>${hour}:00</th>`).join("")}
         </tr>
       </thead>
       <tbody>
@@ -218,7 +218,7 @@ function renderTable() {
   for (const employee of EMPLOYEES) {
     html += `
       <tr>
-        <td class="employee">\${escapeHtml(employee)}</td>
+        <td class="employee">${escapeHtml(employee)}</td>
     `;
 
     for (const hour of HOURS) {
@@ -228,12 +228,12 @@ function renderTable() {
       html += `
         <td>
           <button
-            class="rating rating-\${value || "empty"}"
-            data-person="\${escapeHtml(employee)}"
-            data-hour="\${hour}"
+            class="rating rating-${value || "empty"}"
+            data-person="${escapeHtml(employee)}"
+            data-hour="${hour}"
             title="Klikni pro zadání nebo úpravu"
           >
-            \${value || "—"}
+            ${value || "—"}
           </button>
         </td>
       `;
@@ -267,7 +267,7 @@ async function enterRating(person, hour) {
   const current = existing ? existing.score : "";
 
   const input = prompt(
-    `\${person}\n\${hour}:00\n\n` +
+    `${person}\n${hour}:00\n\n` +
     `Míra vyhoření 1–10\n\n` +
     `1 = Dobře jedeš\n` +
     `2 = Jde to jako po másle\n` +
@@ -279,7 +279,7 @@ async function enterRating(person, hour) {
     `8 = Dneska netahám\n` +
     `9 = Kávec a domů\n` +
     `10 = TOTAL BURNOUT\n\n` +
-    (existing ? `Aktuálně: \${current}\n\nPro smazání napiš: smazat` : ""),
+    (existing ? `Aktuálně: ${current}\n\nPro smazání napiš: smazat` : ""),
     current
   );
 
@@ -343,10 +343,14 @@ async function enterRating(person, hour) {
     return;
   }
 
-  if (existing) {
-    ratings = ratings.map(r => r.id === existing.id ? result.data : r);
-  } else {
-    ratings.push(result.data);
+  const savedRow = result.data && result.data[0] ? result.data[0] : result.data;
+
+  if (savedRow) {
+    if (existing) {
+      ratings = ratings.map(r => r.id === existing.id ? savedRow : r);
+    } else {
+      ratings.push(savedRow);
+    }
   }
 
   status.textContent = "🟢 Data úspěšně uložena";
@@ -354,7 +358,7 @@ async function enterRating(person, hour) {
 }
 
 // =====================================================
-// DOPLŇKOVÉ RENDEROVACÍ FUNKCE (PROTI CHYBÁM V KONZOLI)
+// DOPLŇKOVÉ RENDEROVACÍ FUNKCE
 // =====================================================
 
 function renderLeaderboard() {
@@ -364,18 +368,18 @@ function renderLeaderboard() {
     .sort((a, b) => b.average - a.average);
 
   leaderboard.innerHTML = stats.length 
-    ? `<ul>\${stats.map((s, idx) => `<li>\${idx + 1}. \${escapeHtml(s.person)} — Průměr: \${s.average.toFixed(2)} (\${s.count}x)</li>`).join("")}</ul>`
+    ? `<ul>${stats.map((s, idx) => `<li>${idx + 1}. ${escapeHtml(s.person)} — Průměr: ${s.average.toFixed(2)} (${s.count}x)</li>`).join("")}</ul>`
     : "<p>Zatím žádná data pro žebříček.</p>";
 }
 
 function renderYearStats() {
   if (!yearStats) return;
   const year = getSelectedYear();
-  let html = `<h3>Statistiky pro rok \${year}</h3>`;
+  let html = `<h3>Statistiky pro rok ${year}</h3>`;
   
   EMPLOYEES.forEach(person => {
     const s = getPersonStats(person);
-    html += `<p><strong>\${escapeHtml(person)}:</strong> \${s.count > 0 ? `Průměr: \${s.average.toFixed(2)}, Max: \${s.highest}, Min: \${s.lowest}` : 'Žádná data'}</p>`;
+    html += `<p><strong>${escapeHtml(person)}:</strong> ${s.count > 0 ? `Průměr: ${s.average.toFixed(2)}, Max: ${s.highest}, Min: ${s.lowest}` : 'Žádná data'}</p>`;
   });
   
   yearStats.innerHTML = html;
@@ -394,59 +398,8 @@ function renderWinner() {
   const maxScore = Math.max(...dayRatings.map(r => r.score));
   const winners = [...new Set(dayRatings.filter(r => r.score === maxScore).map(r => r.person))];
 
-  currentWinner.innerHTML = `🔥 Dnešní leader vyhoření s hodnotou \${maxScore}: <strong>\${winners.map(escapeHtml).join(", ")}</strong>`;
+  currentWinner.innerHTML = `🔥 Dnešní leader vyhoření s hodnotou ${maxScore}: <strong>${winners.map(escapeHtml).join(", ")}</strong>`;
 }
 
 function renderComparison() {
-  if (!comparison) return;
-  comparison.innerHTML = "<p>Porovnání je připraveno.</p>";
-}
-
-function renderChart() {
-  if (!chartCanvas) return;
-}
-
-function renderMessage() {
-  if (!messageBox) return;
-  const date = dateInput?.value;
-  const dayRatings = ratings.filter(r => r.date === date);
-  
-  if (!dayRatings.length) {
-    messageBox.textContent = "Žádné dnešní hlášky.";
-    return;
-  }
-
-  const latest = dayRatings[dayRatings.length - 1];
-  messageBox.innerHTML = `💬 <strong>\${escapeHtml(latest.person)}</strong> (\${latest.hour}:00): <em>"\${MESSAGES[latest.score] || "Bez hlášky"}"</em>`;
-}
-
-// =====================================================
-// EXPORT DO CSV
-// =====================================================
-
-if (exportButton) {
-  exportButton.addEventListener("click", () => {
-    if (!ratings.length) {
-      alert("Není co exportovat.");
-      return;
-    }
-
-    let csv = "id,year,date,hour,person,score\n";
-    ratings.forEach(r => {
-      csv += `"\${r.id ?? ''}",\${r.year},"\\${r.date}",\${r.hour},"\${r.person.replace(/"/g, '""')}",\${r.score}\n`;
-    });
-
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", `burnout_stats_\${getSelectedYear()}.csv`);
-    link.style.visibility = "hidden";
-    document.body.appendChild(link);
-    link.click();
-    document.body.appendChild(link);
-    link.remove();
-  });
-}
-
-loadRatings();
+Při použití kódu buďte obezřetní.if (!comparison) return;comparison.innerHTML = "Porovnání je připraveno.";}function renderChart() {if (!chartCanvas) return;}function renderMessage() {if (!messageBox) return;const date = dateInput?.value;const dayRatings = ratings.filter(r => r.date === date);if (!dayRatings.length) {messageBox.textContent = "Žádné dnešní hlášky.";return;}const latest = dayRatings[dayRatings.length - 1];messageBox.innerHTML = 💬 <strong>${escapeHtml(latest.person)}</strong> (${latest.hour}:00): <em>"${MESSAGES[latest.score] || "Bez hlášky"}"</em>;}// =====================================================// EXPORT DO CSV// =====================================================if (exportButton) {exportButton.addEventListener("click", () => {if (!ratings.length) {alert("Není co exportovat.");return;}let csv = "id,year,date,hour,person,score\n";ratings.forEach(r => {csv += "${r.id ?? ''}",${r.year},"${r.date}",${r.hour},"${r.person.replace(/"/g, '""')}",${r.score}\n;});const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });const url = URL.createObjectURL(blob);const link = document.createElement("a");link.setAttribute("href", url);link.setAttribute("download", burnout_stats_${getSelectedYear()}.csv);link.style.visibility = "hidden";document.body.appendChild(link);link.click();document.body.appendChild(link);link.remove();});}loadRatings();
