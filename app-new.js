@@ -55,11 +55,11 @@ const MESSAGES = {
   1: "😎 Dobře jedeš",
   2: "😎 Jde to jako po másle",
   3: "🙂 Dneska to feeluju",
-  4: "😐 Nebudu tady dělat všechno, do piče",
-  5: "😐 Dneska to necejtím",
+  4: "😐 Dneska to necejtím",
+  5: "😐 Nebudu tady dělat všechno, do piče",
   6: "😑 Děleeej, tak už to pískni",
   7: "😤 Nebudu to dělat",
-  8: "🔥 Dneska už netahám",
+  8: "🔥 Dneska netahám",
   9: "☕ Kávec a domů",
   10: "☠️ TOTAL BURNOUT"
 };
