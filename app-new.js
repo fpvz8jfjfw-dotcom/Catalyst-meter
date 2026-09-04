@@ -66,7 +66,7 @@ const MESSAGES = {
 };
 
 // =====================================================
-// POMOCNÉ
+// POMOCNÉ FUNKCE
 // =====================================================
 
 function today() {
@@ -153,12 +153,8 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function escapeAttribute(value) {
-  return escapeHtml(value);
-}
-
 // =====================================================
-// RATINGS – NAČTENÍ
+// NAČTENÍ HODNOCENÍ
 // =====================================================
 
 async function loadRatings() {
@@ -169,11 +165,18 @@ async function loadRatings() {
   const { data, error } = await supabase
     .from("ratings")
     .select("*")
-    .order("date", { ascending: true })
-    .order("hour", { ascending: true });
+    .order("date", {
+      ascending: true
+    })
+    .order("hour", {
+      ascending: true
+    });
 
   if (error) {
-    console.error("SUPABASE LOAD ERROR:", error);
+    console.error(
+      "SUPABASE LOAD ERROR:",
+      error
+    );
 
     status.textContent =
       "❌ Nepodařilo se načíst data ze Supabase.";
@@ -199,7 +202,7 @@ async function loadRatings() {
 }
 
 // =====================================================
-// HLAVNÍ RENDER
+// RENDER
 // =====================================================
 
 function render() {
@@ -226,11 +229,12 @@ function renderTable() {
       <thead>
         <tr>
           <th>Zaměstnanec</th>
-          ${HOURS.map(
-            hour => `<th>${hour}:00</th>`
-          ).join("")}
+          ${HOURS
+            .map(hour => `<th>${hour}:00</th>`)
+            .join("")}
         </tr>
       </thead>
+
       <tbody>
   `;
 
@@ -257,7 +261,7 @@ function renderTable() {
         <td>
           <button
             class="rating rating-${value || "empty"}"
-            data-person="${escapeAttribute(employee)}"
+            data-person="${escapeHtml(employee)}"
             data-hour="${hour}"
             title="Klikni pro zadání nebo úpravu"
           >
@@ -313,7 +317,7 @@ async function enterRating(person, hour) {
   const input = prompt(
     `${person}\n${hour}:00\n\n` +
     `Míra vyhoření 1–10\n\n` +
-    `1 = Dobře jedu\n` +
+    `1 = Dobře jedeš\n` +
     `2 = Jde to jako po másle\n` +
     `3 = Dneska to feeluju\n` +
     `4 = Dneska to necejtím\n` +
@@ -431,7 +435,7 @@ async function enterRating(person, hour) {
 }
 
 // =====================================================
-// LEADERBOARD
+// ŽEBŘÍČEK
 // =====================================================
 
 function renderLeaderboard() {
@@ -466,6 +470,7 @@ function renderLeaderboard() {
 
         return `
           <div class="leader">
+
             <span class="medal">
               ${medal}
             </span>
@@ -486,6 +491,7 @@ function renderLeaderboard() {
             <small>
               ${result.count} měření
             </small>
+
           </div>
         `;
       })
@@ -661,7 +667,9 @@ function renderComparison() {
           <div class="compare-row">
 
             <div class="compare-head">
+
               <strong>
+
                 <span
                   class="player-dot"
                   style="background:${color}"
@@ -669,14 +677,17 @@ function renderComparison() {
 
                 ${index + 1}.
                 ${escapeHtml(result.person)}
+
               </strong>
 
               <span>
                 ${result.average.toFixed(2)}
               </span>
+
             </div>
 
             <div class="bar">
+
               <div
                 class="bar-fill"
                 style="
@@ -684,6 +695,7 @@ function renderComparison() {
                   background:${color};
                 "
               ></div>
+
             </div>
 
             <small>
@@ -989,10 +1001,18 @@ function renderChart() {
 
         if (!drawing) {
           ctx.beginPath();
-          ctx.moveTo(x, y);
+
+          ctx.moveTo(
+            x,
+            y
+          );
+
           drawing = true;
         } else {
-          ctx.lineTo(x, y);
+          ctx.lineTo(
+            x,
+            y
+          );
         }
       }
     );
@@ -1219,7 +1239,8 @@ function exportCsv() {
   const blob =
     new Blob(
       [
-        "\ufeff" + csv
+        "\ufeff" +
+        csv
       ],
       {
         type:
@@ -1273,12 +1294,14 @@ function injectChatStyles() {
 
   style.textContent = `
     .work-chat {
-      margin-top: 30px;
-      padding: 20px;
+      width: 100%;
+      box-sizing: border-box;
+      margin: 0 0 25px 0;
+      padding: 16px;
       border-radius: 18px;
       background: #ffffff;
-      box-shadow: 0 8px 30px rgba(0,0,0,.08);
       border: 1px solid #e5e7eb;
+      box-shadow: 0 8px 30px rgba(0,0,0,.08);
     }
 
     .work-chat-header {
@@ -1286,12 +1309,12 @@ function injectChatStyles() {
       align-items: center;
       justify-content: space-between;
       gap: 10px;
-      margin-bottom: 15px;
+      margin-bottom: 12px;
       flex-wrap: wrap;
     }
 
     .work-chat-title {
-      font-size: 22px;
+      font-size: 21px;
       font-weight: 800;
     }
 
@@ -1301,27 +1324,27 @@ function injectChatStyles() {
     }
 
     .work-chat-messages {
-      height: 360px;
+      height: 260px;
       overflow-y: auto;
-      padding: 12px;
+      padding: 10px;
       background: #f7f7f8;
       border-radius: 14px;
       border: 1px solid #e5e7eb;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 8px;
     }
 
     .work-chat-empty {
       margin: auto;
       color: #888;
       text-align: center;
-      padding: 30px 10px;
+      padding: 25px 10px;
     }
 
     .chat-message {
       max-width: 85%;
-      padding: 10px 13px;
+      padding: 9px 12px;
       border-radius: 14px;
       background: #fff;
       border: 1px solid #e5e7eb;
@@ -1329,20 +1352,20 @@ function injectChatStyles() {
     }
 
     .chat-message-name {
-      font-size: 13px;
+      font-size: 12px;
       font-weight: 800;
       margin-bottom: 3px;
     }
 
     .chat-message-text {
-      font-size: 15px;
+      font-size: 14px;
       line-height: 1.4;
       white-space: pre-wrap;
       overflow-wrap: anywhere;
     }
 
     .chat-message-time {
-      margin-top: 5px;
+      margin-top: 4px;
       font-size: 10px;
       color: #999;
     }
@@ -1350,16 +1373,16 @@ function injectChatStyles() {
     .chat-message-gif {
       display: block;
       max-width: 100%;
-      max-height: 300px;
-      margin-top: 7px;
+      max-height: 240px;
+      margin-top: 5px;
       border-radius: 10px;
       object-fit: contain;
     }
 
     .chat-message-gif-link {
       display: inline-block;
-      margin-top: 5px;
-      font-size: 11px;
+      margin-top: 3px;
+      font-size: 10px;
       color: #777;
       text-decoration: none;
     }
@@ -1369,19 +1392,19 @@ function injectChatStyles() {
     }
 
     .chat-message-form {
-      margin-top: 12px;
+      margin-top: 10px;
       display: grid;
-      grid-template-columns: 180px 1fr auto auto;
-      gap: 8px;
+      grid-template-columns: 170px 1fr auto auto;
+      gap: 7px;
     }
 
     .chat-message-form select,
     .chat-message-form input,
     .chat-message-form button {
-      min-height: 44px;
+      min-height: 42px;
       border-radius: 10px;
       border: 1px solid #d1d5db;
-      padding: 0 12px;
+      padding: 0 11px;
       font: inherit;
       box-sizing: border-box;
     }
@@ -1396,7 +1419,7 @@ function injectChatStyles() {
       color: white;
       font-weight: 700;
       cursor: pointer;
-      padding: 0 18px;
+      padding: 0 15px;
     }
 
     .chat-message-form button:hover {
@@ -1414,8 +1437,8 @@ function injectChatStyles() {
 
     .chat-gif-panel {
       display: none;
-      margin-top: 12px;
-      padding: 12px;
+      margin-top: 10px;
+      padding: 10px;
       border-radius: 14px;
       background: #f7f7f8;
       border: 1px solid #e5e7eb;
@@ -1427,24 +1450,24 @@ function injectChatStyles() {
 
     .chat-gif-search {
       display: flex;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: 7px;
+      margin-bottom: 10px;
     }
 
     .chat-gif-search input {
       flex: 1;
-      min-height: 42px;
+      min-height: 40px;
       border-radius: 10px;
       border: 1px solid #d1d5db;
-      padding: 0 12px;
+      padding: 0 11px;
       font: inherit;
     }
 
     .chat-gif-search button {
-      min-height: 42px;
+      min-height: 40px;
       border: none;
       border-radius: 10px;
-      padding: 0 15px;
+      padding: 0 14px;
       background: #111827;
       color: white;
       font-weight: 700;
@@ -1454,8 +1477,8 @@ function injectChatStyles() {
     .chat-gif-results {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      max-height: 330px;
+      gap: 7px;
+      max-height: 280px;
       overflow-y: auto;
     }
 
@@ -1464,9 +1487,14 @@ function injectChatStyles() {
       padding: 0;
       background: transparent;
       cursor: pointer;
-      border-radius: 10px;
+      border-radius: 9px;
       overflow: hidden;
       aspect-ratio: 1;
+      transition: transform .12s;
+    }
+
+    .chat-gif-item:hover {
+      transform: scale(1.04);
     }
 
     .chat-gif-item img {
@@ -1476,30 +1504,34 @@ function injectChatStyles() {
       display: block;
     }
 
-    .chat-gif-item:hover {
-      transform: scale(1.03);
-    }
-
     .chat-gif-loading,
     .chat-gif-error,
     .chat-gif-empty {
-      padding: 20px;
+      padding: 18px;
       text-align: center;
       color: #777;
       grid-column: 1 / -1;
     }
 
     @media (max-width: 700px) {
+      .work-chat {
+        padding: 12px;
+      }
+
+      .work-chat-messages {
+        height: 250px;
+      }
+
       .chat-message-form {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .chat-message-form input {
+        grid-column: 1 / -1;
       }
 
       .chat-message {
         max-width: 94%;
-      }
-
-      .work-chat-messages {
-        height: 320px;
       }
 
       .chat-gif-results {
@@ -1516,7 +1548,7 @@ function injectChatStyles() {
 }
 
 // =====================================================
-// CHAT – UI
+// CHAT – VYTVOŘENÍ
 // =====================================================
 
 function createChatUI() {
@@ -1568,6 +1600,7 @@ function createChatUI() {
       id="chatGifPanel"
       class="chat-gif-panel"
     >
+
       <div class="chat-gif-search">
 
         <input
@@ -1591,9 +1624,10 @@ function createChatUI() {
         class="chat-gif-results"
       >
         <div class="chat-gif-empty">
-          🔥 Hledej GIF a vyber ho.
+          🎞️ Hledej GIF a vyber ho.
         </div>
       </div>
+
     </div>
 
     <form
@@ -1608,7 +1642,7 @@ function createChatUI() {
         ${EMPLOYEES
           .map(
             person => `
-              <option value="${escapeAttribute(person)}">
+              <option value="${escapeHtml(person)}">
                 ${escapeHtml(person)}
               </option>
             `
@@ -1645,9 +1679,16 @@ function createChatUI() {
     document.querySelector("main");
 
   if (main) {
-    main.appendChild(chat);
+    // CHAT JE TEĎ ÚPLNĚ NAHOŘE
+    main.insertBefore(
+      chat,
+      main.firstChild
+    );
   } else {
-    document.body.appendChild(chat);
+    document.body.insertBefore(
+      chat,
+      document.body.firstChild
+    );
   }
 
   const savedPerson =
@@ -1742,280 +1783,6 @@ function createChatUI() {
 }
 
 // =====================================================
-// GIF PANEL
-// =====================================================
-
-function toggleGifPanel() {
-  const panel =
-    document.getElementById(
-      "chatGifPanel"
-    );
-
-  if (!panel) return;
-
-  panel.classList.toggle("open");
-
-  if (
-    panel.classList.contains("open")
-  ) {
-    const input =
-      document.getElementById(
-        "chatGifSearch"
-      );
-
-    if (input) {
-      input.focus();
-    }
-  }
-}
-
-// =====================================================
-// GIF VYHLEDÁVÁNÍ
-// =====================================================
-//
-// Používáme veřejný endpoint Tenoru.
-// Nevyžaduje vlastní API klíč pro
-// jednoduché načítání výsledků přes
-// webový proxy endpoint.
-//
-// Pokud by Tenor endpoint později změnil // chování, chat samotný dál funguje.
-// =====================================================
-
-async function searchGifs() {
-  const input =
-    document.getElementById(
-      "chatGifSearch"
-    );
-
-  const results =
-    document.getElementById(
-      "chatGifResults"
-    );
-
-  if (!input || !results) {
-    return;
-  }
-
-  const query =
-    input.value.trim();
-
-  if (!query) {
-    results.innerHTML = `
-      <div class="chat-gif-empty">
-        🔎 Napiš, co chceš najít.
-      </div>
-    `;
-
-    return;
-  }
-
-  results.innerHTML = `
-    <div class="chat-gif-loading">
-      🔎 Hledám GIFy…
-    </div>
-  `;
-
-  try {
-    const url =
-      "https://tenor.googleapis.com/v2/search" +
-      "?q=" +
-      encodeURIComponent(query) +
-      "&key=LIVDSRZULELA" +
-      "&client_key=pracovni_liga" +
-      "&limit=20" +
-      "&media_filter=gif,tinygif";
-
-    const response =
-      await fetch(url);
-
-    if (!response.ok) {
-      throw new Error(
-        `HTTP ${response.status}`
-      );
-    }
-
-    const data =
-      await response.json();
-
-    const items =
-      data.results || [];
-
-    if (!items.length) {
-      results.innerHTML = `
-        <div class="chat-gif-empty">
-          😕 Nic jsem nenašel.
-        </div>
-      `;
-
-      return;
-    }
-
-    results.innerHTML =
-      items
-        .map(item => {
-          const media =
-            item.media_formats || {};
-
-          const gif =
-            media.gif ||
-            media.tinygif;
-
-          if (!gif || !gif.url) {
-            return "";
-          }
-
-          const gifUrl =
-            gif.url;
-
-          return `
-            <button
-              type="button"
-              class="chat-gif-item"
-              data-gif-url="${escapeAttribute(gifUrl)}"
-              title="Poslat GIF"
-            >
-              <img
-                src="${escapeAttribute(gifUrl)}"
-                alt="GIF"
-                loading="lazy"
-              />
-            </button>
-          `;
-        })
-        .join("");
-
-    document
-      .querySelectorAll(
-        ".chat-gif-item"
-      )
-      .forEach(button => {
-        button.addEventListener(
-          "click",
-          () => {
-            sendGif(
-              button.dataset.gifUrl
-            );
-          }
-        );
-      });
-
-  } catch (error) {
-    console.error(
-      "GIF SEARCH ERROR:",
-      error
-    );
-
-    results.innerHTML = `
-      <div class="chat-gif-error">
-        ❌ GIFy se nepodařilo načíst.
-        <br>
-        <small>
-          Může jít o dočasný problém služby.
-        </small>
-      </div>
-    `;
-  }
-}
-
-// =====================================================
-// GIF – ODESLÁNÍ
-// =====================================================
-
-async function sendGif(gifUrl) {
-  const personElement =
-    document.getElementById(
-      "chatPerson"
-    );
-
-  if (!personElement) {
-    return;
-  }
-
-  const person =
-    personElement.value;
-
-  if (
-    !EMPLOYEES.includes(person)
-  ) {
-    return;
-  }
-
-  if (!gifUrl) {
-    return;
-  }
-
-  setChatStatus(
-    "🎞️ Odesílám GIF…"
-  );
-
-  const {
-    data,
-    error
-  } = await supabase
-    .from("chat_messages")
-    .insert({
-      person,
-      message: "",
-      gif_url: gifUrl
-    })
-    .select()
-    .single();
-
-  if (error) {
-    console.error(
-      "GIF SEND ERROR:",
-      error
-    );
-
-    alert(
-      "❌ GIF se nepodařilo odeslat:\n\n" +
-      error.message
-    );
-
-    setChatStatus(
-      "❌ Chyba při odesílání GIFu",
-      true
-    );
-
-    return;
-  }
-
-  if (
-    data &&
-    !chatMessages.some(
-      item =>
-        String(item.id) ===
-        String(data.id)
-    )
-  ) {
-    chatMessages.push(data);
-
-    chatMessages.sort(
-      (a, b) =>
-        new Date(a.created_at) -
-        new Date(b.created_at)
-    );
-
-    renderChatMessages();
-  }
-
-  const panel =
-    document.getElementById(
-      "chatGifPanel"
-    );
-
-  if (panel) {
-    panel.classList.remove(
-      "open"
-    );
-  }
-
-  setChatStatus(
-    "🟢 Chat připojen"
-  );
-}
-
-// =====================================================
 // CHAT STATUS
 // =====================================================
 
@@ -2040,7 +1807,7 @@ function setChatStatus(
 }
 
 // =====================================================
-// CHAT – NAČTENÍ
+// CHAT – NAČTENÍ HISTORIE
 // =====================================================
 
 async function loadChatMessages() {
@@ -2074,8 +1841,6 @@ async function loadChatMessages() {
       "CHAT LOAD ERROR:",
       error
     );
-
-    chatMessages = [];
 
     messagesElement.innerHTML = `
       <div class="work-chat-empty">
@@ -2175,9 +1940,6 @@ function renderChatMessages(
           message.gif_url ||
           "";
 
-        const hasGif =
-          Boolean(gifUrl);
-
         const text =
           message.message ||
           "";
@@ -2193,18 +1955,18 @@ function renderChatMessages(
             </div>
 
             ${
-              hasGif
+              gifUrl
                 ? `
                   <img
                     class="chat-message-gif"
-                    src="${escapeAttribute(gifUrl)}"
+                    src="${escapeHtml(gifUrl)}"
                     alt="GIF"
                     loading="lazy"
                   />
 
                   <a
                     class="chat-message-gif-link"
-                    href="${escapeAttribute(gifUrl)}"
+                    href="${escapeHtml(gifUrl)}"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -2242,7 +2004,7 @@ function renderChatMessages(
 }
 
 // =====================================================
-// CHAT – TEXTOVÁ ZPRÁVA
+// CHAT – TEXT
 // =====================================================
 
 async function sendChatMessage(event) {
@@ -2308,7 +2070,8 @@ async function sendChatMessage(event) {
     .from("chat_messages")
     .insert({
       person,
-      message
+      message,
+      gif_url: null
     })
     .select()
     .single();
@@ -2369,6 +2132,265 @@ async function sendChatMessage(event) {
 }
 
 // =====================================================
+// GIF PANEL
+// =====================================================
+
+function toggleGifPanel() {
+  const panel =
+    document.getElementById(
+      "chatGifPanel"
+    );
+
+  if (!panel) return;
+
+  panel.classList.toggle("open");
+
+  if (
+    panel.classList.contains("open")
+  ) {
+    const input =
+      document.getElementById(
+        "chatGifSearch"
+      );
+
+    if (input) {
+      input.focus();
+    }
+  }
+}
+
+// =====================================================
+// GIF VYHLEDÁVÁNÍ
+// =====================================================
+
+async function searchGifs() {
+  const input =
+    document.getElementById(
+      "chatGifSearch"
+    );
+
+  const results =
+    document.getElementById(
+      "chatGifResults"
+    );
+
+  if (!input || !results) return;
+
+  const query =
+    input.value.trim();
+
+  if (!query) {
+    results.innerHTML = `
+      <div class="chat-gif-empty">
+        🔎 Napiš, co chceš najít.
+      </div>
+    `;
+
+    return;
+  }
+
+  results.innerHTML = `
+    <div class="chat-gif-loading">
+      🔎 Hledám GIFy…
+    </div>
+  `;
+
+  try {
+    const url =
+      "https://tenor.googleapis.com/v2/search" +
+      "?q=" +
+      encodeURIComponent(query) +
+      "&key=LIVDSRZULELA" +
+      "&client_key=pracovni_liga" +
+      "&limit=20" +
+      "&media_filter=gif,tinygif";
+
+    const response =
+      await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    const items =
+      data.results || [];
+
+    if (!items.length) {
+      results.innerHTML = `
+        <div class="chat-gif-empty">
+          😕 Nic jsem nenašel.
+        </div>
+      `;
+
+      return;
+    }
+
+    results.innerHTML =
+      items
+        .map(item => {
+          const media =
+            item.media_formats || {};
+
+          const gif =
+            media.gif ||
+            media.tinygif;
+
+          if (!gif || !gif.url) {
+            return "";
+          }
+
+          return `
+            <button
+              type="button"
+              class="chat-gif-item"
+              data-gif-url="${escapeHtml(gif.url)}"
+              title="Poslat GIF"
+            >
+
+              <img
+                src="${escapeHtml(gif.url)}"
+                alt="GIF"
+                loading="lazy"
+              />
+
+            </button>
+          `;
+        })
+        .join("");
+
+    document
+      .querySelectorAll(
+        ".chat-gif-item"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () => {
+            sendGif(
+              button.dataset.gifUrl
+            );
+          }
+        );
+      });
+
+  } catch (error) {
+    console.error(
+      "GIF SEARCH ERROR:",
+      error
+    );
+
+    results.innerHTML = `
+      <div class="chat-gif-error">
+        ❌ GIFy se nepodařilo načíst.
+        <br>
+        <small>
+          Zkus to za chvíli znovu.
+        </small>
+      </div>
+    `;
+  }
+}
+
+// =====================================================
+// ODESLÁNÍ GIFU
+// =====================================================
+
+async function sendGif(gifUrl) {
+  const personElement =
+    document.getElementById(
+      "chatPerson"
+    );
+
+  if (!personElement) return;
+
+  const person =
+    personElement.value;
+
+  if (
+    !EMPLOYEES.includes(person)
+  ) {
+    return;
+  }
+
+  if (!gifUrl) return;
+
+  setChatStatus(
+    "🎞️ Odesílám GIF…"
+  );
+
+  const {
+    data,
+    error
+  } = await supabase
+    .from("chat_messages")
+    .insert({
+      person,
+      message: "",
+      gif_url: gifUrl
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error(
+      "GIF SEND ERROR:",
+      error
+    );
+
+    alert(
+      "❌ GIF se nepodařilo odeslat:\n\n" +
+      error.message
+    );
+
+    setChatStatus(
+      "❌ Chyba při odesílání GIFu",
+      true
+    );
+
+    return;
+  }
+
+  if (
+    data &&
+    !chatMessages.some(
+      item =>
+        String(item.id) ===
+        String(data.id)
+    )
+  ) {
+    chatMessages.push(data);
+
+    chatMessages.sort(
+      (a, b) =>
+        new Date(a.created_at) -
+        new Date(b.created_at)
+    );
+
+    renderChatMessages();
+  }
+
+  const panel =
+    document.getElementById(
+      "chatGifPanel"
+    );
+
+  if (panel) {
+    panel.classList.remove(
+      "open"
+    );
+  }
+
+  setChatStatus(
+    "🟢 Chat připojen"
+  );
+}
+
+// =====================================================
 // REALTIME
 // =====================================================
 
@@ -2403,7 +2425,9 @@ function setupChatRealtime() {
             return;
           }
 
-          chatMessages.push(message);
+          chatMessages.push(
+            message
+          );
 
           chatMessages.sort(
             (a, b) =>
@@ -2452,7 +2476,7 @@ function setupChatRealtime() {
 }
 
 // =====================================================
-// FALLBACK CHAT
+// FALLBACK
 // =====================================================
 
 async function refreshChatSilently() {
