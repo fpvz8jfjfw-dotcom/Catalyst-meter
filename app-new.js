@@ -183,13 +183,98 @@ async function enterRating(person, hour) {
     `7 = Nebudu to dělat\n` +
     `8 = Dneska už netahám\n` +
     `9 = Kávec a domů\n` +
-    `10 = TOTAL BURNOUT`,
+    `10 = TOTAL BURNOUT\n\n` +
+    (existing ? `Pro smazání napiš: smazat` : ``),
     current
   );
 
   if (input === null) {
     return;
   }
+
+  // SMAZÁNÍ EXISTUJÍCÍHO HODNOCENÍ
+  if (existing && input.trim().toLowerCase() === "smazat") {
+    status.textContent = "Mažu…";
+
+    const result = await supabase
+      .from("ratings")
+      .delete()
+      .eq("id", existing.id);
+
+    if (result.error) {
+      console.error("SUPABASE DELETE ERROR:", result.error);
+
+      alert(
+        "❌ Chyba při mazání:\n\n" +
+        result.error.message +
+        "\n\n" +
+        (result.error.details || "") +
+        "\n\n" +
+        (result.error.hint || "")
+      );
+
+      status.textContent = "❌ Chyba při mazání";
+      return;
+    }
+
+    ratings = ratings.filter(r => r.id !== existing.id);
+
+    status.textContent = "✅ Smazáno";
+    render();
+    return;
+  }
+
+  const score = Number(input);
+
+  if (!Number.isInteger(score) || score < 1 || score > 10) {
+    alert("Zadej celé číslo od 1 do 10, nebo napiš smazat.");
+    return;
+  }
+
+  status.textContent = "Ukládám…";
+
+  const payload = {
+    year: Number(date.substring(0, 4)),
+    person: person,
+    score: score,
+    date: date,
+    hour: hour
+  };
+
+  let result;
+
+  if (existing) {
+    result = await supabase
+      .from("ratings")
+      .update(payload)
+      .eq("id", existing.id);
+  } else {
+    result = await supabase
+      .from("ratings")
+      .insert(payload);
+  }
+
+  if (result.error) {
+    console.error("SUPABASE SAVE ERROR:", result.error);
+
+    alert(
+      "❌ Chyba při ukládání:\n\n" +
+      result.error.message +
+      "\n\n" +
+      (result.error.details || "") +
+      "\n\n" +
+      (result.error.hint || "")
+    );
+
+    status.textContent = "❌ Chyba při ukládání";
+    return;
+  }
+
+  status.textContent = "✅ Uloženo";
+
+  await loadRatings();
+}
+
 
   const score = Number(input);
 
