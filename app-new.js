@@ -22,7 +22,6 @@ const EMPLOYEES = [
 const HOURS = [
   5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 ];
 
-// Každý hráč má vlastní barvu
 const PLAYER_COLORS = {
   "Adam Juda": "#2563eb",
   "Michal Mourek": "#dc2626",
@@ -67,7 +66,7 @@ const MESSAGES = {
 };
 
 // =====================================================
-// DNES
+// POMOCNÉ
 // =====================================================
 
 function today() {
@@ -85,10 +84,6 @@ function today() {
 if (dateInput) {
   dateInput.value = today();
 }
-
-// =====================================================
-// POMOCNÉ FUNKCE
-// =====================================================
 
 function getSelectedYear() {
   if (!dateInput || !dateInput.value) {
@@ -158,32 +153,27 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function escapeAttribute(value) {
+  return escapeHtml(value);
+}
+
 // =====================================================
-// NAČTENÍ DAT
+// RATINGS – NAČTENÍ
 // =====================================================
 
 async function loadRatings() {
-  if (!status) {
-    return;
-  }
+  if (!status) return;
 
   status.textContent = "Načítám data…";
 
   const { data, error } = await supabase
     .from("ratings")
     .select("*")
-    .order("date", {
-      ascending: true
-    })
-    .order("hour", {
-      ascending: true
-    });
+    .order("date", { ascending: true })
+    .order("hour", { ascending: true });
 
   if (error) {
-    console.error(
-      "SUPABASE LOAD ERROR:",
-      error
-    );
+    console.error("SUPABASE LOAD ERROR:", error);
 
     status.textContent =
       "❌ Nepodařilo se načíst data ze Supabase.";
@@ -227,9 +217,7 @@ function render() {
 // =====================================================
 
 function renderTable() {
-  if (!table || !dateInput) {
-    return;
-  }
+  if (!table || !dateInput) return;
 
   const date = dateInput.value;
 
@@ -238,12 +226,11 @@ function renderTable() {
       <thead>
         <tr>
           <th>Zaměstnanec</th>
-          ${HOURS
-            .map(hour => `<th>${hour}:00</th>`)
-            .join("")}
+          ${HOURS.map(
+            hour => `<th>${hour}:00</th>`
+          ).join("")}
         </tr>
       </thead>
-
       <tbody>
   `;
 
@@ -251,7 +238,7 @@ function renderTable() {
     html += `
       <tr>
         <td class="employee">
-          ${employee}
+          ${escapeHtml(employee)}
         </td>
     `;
 
@@ -270,7 +257,7 @@ function renderTable() {
         <td>
           <button
             class="rating rating-${value || "empty"}"
-            data-person="${escapeHtml(employee)}"
+            data-person="${escapeAttribute(employee)}"
             data-hour="${hour}"
             title="Klikni pro zadání nebo úpravu"
           >
@@ -280,9 +267,7 @@ function renderTable() {
       `;
     }
 
-    html += `
-      </tr>
-    `;
+    html += "</tr>";
   }
 
   html += `
@@ -298,15 +283,9 @@ function renderTable() {
       button.addEventListener(
         "click",
         () => {
-          const person =
-            button.dataset.person;
-
-          const hour =
-            Number(button.dataset.hour);
-
           enterRating(
-            person,
-            hour
+            button.dataset.person,
+            Number(button.dataset.hour)
           );
         }
       );
@@ -317,13 +296,8 @@ function renderTable() {
 // ZADÁNÍ / PŘEPIS / SMAZÁNÍ
 // =====================================================
 
-async function enterRating(
-  person,
-  hour
-) {
-  if (!dateInput) {
-    return;
-  }
+async function enterRating(person, hour) {
+  if (!dateInput) return;
 
   const date = dateInput.value;
 
@@ -334,72 +308,46 @@ async function enterRating(
   );
 
   const current =
-    existing
-      ? existing.score
-      : "";
+    existing ? existing.score : "";
 
   const input = prompt(
-    `${person}\n` +
-    `${hour}:00\n\n` +
+    `${person}\n${hour}:00\n\n` +
     `Míra vyhoření 1–10\n\n` +
     `1 = Dobře jedu\n` +
     `2 = Jde to jako po másle\n` +
-    `3 = Nebudu tady dělat všechno, do piče\n` +
-    `4 = Dělej zacukruj\n` +
-    `5 = Dneska to necejtím\n` +
-    `6 = Nebudu to dělat, kurva uuuž\n` +
-    `7 = Děleeej, tak už to pískni\n` +
+    `3 = Dneska to feeluju\n` +
+    `4 = Dneska to necejtím\n` +
+    `5 = Nebudu tady dělat všechno, do piče\n` +
+    `6 = Děleeej, tak už to pískni\n` +
+    `7 = Nebudu to dělat\n` +
     `8 = Dneska netahám\n` +
     `9 = Kávec a domů\n` +
     `10 = TOTAL BURNOUT\n\n` +
     (
       existing
-        ? `Aktuálně: ${current}\n\n` +
-          `Pro smazání napiš: smazat`
+        ? `Aktuálně: ${current}\n\nPro smazání napiš: smazat`
         : ""
     ),
     current
   );
 
-  if (input === null) {
-    return;
-  }
-
-  // ===================================================
-  // SMAZÁNÍ
-  // ===================================================
+  if (input === null) return;
 
   if (
     existing &&
-    input
-      .trim()
-      .toLowerCase() === "smazat"
+    input.trim().toLowerCase() === "smazat"
   ) {
-    status.textContent =
-      "🗑️ Mažu…";
+    status.textContent = "🗑️ Mažu…";
 
-    const result =
-      await supabase
-        .from("ratings")
-        .delete()
-        .eq(
-          "id",
-          existing.id
-        );
+    const result = await supabase
+      .from("ratings")
+      .delete()
+      .eq("id", existing.id);
 
     if (result.error) {
-      console.error(
-        "SUPABASE DELETE ERROR:",
-        result.error
-      );
-
       alert(
         "❌ Chyba při mazání:\n\n" +
-        result.error.message +
-        "\n\n" +
-        (result.error.details || "") +
-        "\n\n" +
-        (result.error.hint || "")
+        result.error.message
       );
 
       status.textContent =
@@ -408,24 +356,19 @@ async function enterRating(
       return;
     }
 
-    ratings =
-      ratings.filter(
-        r => r.id !== existing.id
-      );
+    ratings = ratings.filter(
+      r => r.id !== existing.id
+    );
 
     status.textContent =
       "🟢 Hodnocení smazáno";
 
     render();
+
     return;
   }
 
-  // ===================================================
-  // KONTROLA
-  // ===================================================
-
-  const score =
-    Number(input);
+  const score = Number(input);
 
   if (
     !Number.isInteger(score) ||
@@ -439,65 +382,38 @@ async function enterRating(
     return;
   }
 
-  // ===================================================
-  // UKLÁDÁNÍ / PŘEPIS
-  // ===================================================
-
   status.textContent =
     existing
       ? "✏️ Přepisuji hodnocení…"
       : "💾 Ukládám…";
 
   const payload = {
-    year:
-      Number(
-        date.substring(0, 4)
-      ),
-
-    person:
-      person,
-
-    score:
-      score,
-
-    date:
-      date,
-
-    hour:
-      hour
+    year: Number(
+      date.substring(0, 4)
+    ),
+    person,
+    score,
+    date,
+    hour
   };
 
   let result;
 
   if (existing) {
-    result =
-      await supabase
-        .from("ratings")
-        .update(payload)
-        .eq(
-          "id",
-          existing.id
-        );
+    result = await supabase
+      .from("ratings")
+      .update(payload)
+      .eq("id", existing.id);
   } else {
-    result =
-      await supabase
-        .from("ratings")
-        .insert(payload);
+    result = await supabase
+      .from("ratings")
+      .insert(payload);
   }
 
   if (result.error) {
-    console.error(
-      "SUPABASE SAVE ERROR:",
-      result.error
-    );
-
     alert(
       "❌ Chyba při ukládání:\n\n" +
-      result.error.message +
-      "\n\n" +
-      (result.error.details || "") +
-      "\n\n" +
-      (result.error.hint || "")
+      result.error.message
     );
 
     status.textContent =
@@ -519,82 +435,60 @@ async function enterRating(
 // =====================================================
 
 function renderLeaderboard() {
-  if (!leaderboard) {
-    return;
-  }
+  if (!leaderboard) return;
 
   const results =
     EMPLOYEES
       .map(person =>
         getPersonStats(person)
       )
-      .sort(
-        (a, b) => {
-          if (
-            a.average === null
-          ) {
-            return 1;
-          }
+      .sort((a, b) => {
+        if (a.average === null) return 1;
+        if (b.average === null) return -1;
 
-          if (
-            b.average === null
-          ) {
-            return -1;
-          }
-
-          return (
-            b.average -
-            a.average
-          );
-        }
-      );
+        return b.average - a.average;
+      });
 
   leaderboard.innerHTML =
     results
-      .map(
-        (result, index) => {
-          const medal =
-            index === 0
-              ? "🥇"
-              : index === 1
-              ? "🥈"
-              : index === 2
-              ? "🥉"
-              : "🏅";
+      .map((result, index) => {
+        const medal =
+          index === 0
+            ? "🥇"
+            : index === 1
+            ? "🥈"
+            : index === 2
+            ? "🥉"
+            : "🏅";
 
-          const color =
-            PLAYER_COLORS[result.person];
+        const color =
+          PLAYER_COLORS[result.person];
 
-          return `
-            <div class="leader">
+        return `
+          <div class="leader">
+            <span class="medal">
+              ${medal}
+            </span>
 
-              <span class="medal">
-                ${medal}
-              </span>
+            <strong style="color:${color}">
+              ${escapeHtml(result.person)}
+            </strong>
 
-              <strong
-                style="color:${color}"
-              >
-                ${escapeHtml(result.person)}
-              </strong>
+            <span>
+              ${
+                result.average === null
+                  ? "zatím bez dat"
+                  : result.average.toFixed(2) +
+                    " / 10"
+              }
+            </span>
 
-              <span>
-                ${
-                  result.average === null
-                    ? "zatím bez dat"
-                    : result.average.toFixed(2) +
-                      " / 10"
-                }
-              </span>
-
-              <small>
-                ${result.count} měření
-              </small>
-
-            </div>
-          `;
-        }
-      )
+            <small>
+              ${result.count} měření
+            </small>
+          </div>
+        `;
+      })
       .join("");
 }
 
@@ -603,18 +497,14 @@ function renderLeaderboard() {
 // =====================================================
 
 function renderYearStats() {
-  if (!yearStats) {
-    return;
-  }
+  if (!yearStats) return;
 
   const yearRatings =
     getYearRatings();
 
   const values =
     yearRatings
-      .map(r =>
-        Number(r.score)
-      )
+      .map(r => Number(r.score))
       .filter(v =>
         Number.isFinite(v)
       );
@@ -650,36 +540,27 @@ function renderYearStats() {
       (sum, value) =>
         sum + value,
       0
-    ) /
-    values.length;
+    ) / values.length;
 
   yearStats.innerHTML = `
     <div class="stat">
       <span>Celkem měření</span>
-      <strong>
-        ${values.length}
-      </strong>
+      <strong>${values.length}</strong>
     </div>
 
     <div class="stat">
       <span>Roční průměr</span>
-      <strong>
-        ${average.toFixed(2)}
-      </strong>
+      <strong>${average.toFixed(2)}</strong>
     </div>
 
     <div class="stat">
       <span>Největší utrpení</span>
-      <strong>
-        ${Math.max(...values)} / 10
-      </strong>
+      <strong>${Math.max(...values)} / 10</strong>
     </div>
 
     <div class="stat">
       <span>Nejnižší hodnocení</span>
-      <strong>
-        ${Math.min(...values)} / 10
-      </strong>
+      <strong>${Math.min(...values)} / 10</strong>
     </div>
   `;
 }
@@ -689,9 +570,7 @@ function renderYearStats() {
 // =====================================================
 
 function renderWinner() {
-  if (!currentWinner) {
-    return;
-  }
+  if (!currentWinner) return;
 
   const results =
     EMPLOYEES
@@ -704,8 +583,7 @@ function renderWinner() {
       )
       .sort(
         (a, b) =>
-          b.average -
-          a.average
+          b.average - a.average
       );
 
   if (!results.length) {
@@ -734,13 +612,11 @@ function renderWinner() {
 }
 
 // =====================================================
-// POROVNÁNÍ HRÁČŮ
+// POROVNÁNÍ
 // =====================================================
 
 function renderComparison() {
-  if (!comparison) {
-    return;
-  }
+  if (!comparison) return;
 
   const results =
     EMPLOYEES
@@ -753,8 +629,7 @@ function renderComparison() {
       )
       .sort(
         (a, b) =>
-          b.average -
-          a.average
+          b.average - a.average
       );
 
   if (!results.length) {
@@ -769,61 +644,57 @@ function renderComparison() {
 
   comparison.innerHTML =
     results
-      .map(
-        (result, index) => {
-          const width =
-            Math.max(
-              5,
-              Math.min(
-                100,
-                result.average * 10
-              )
-            );
+      .map((result, index) => {
+        const width =
+          Math.max(
+            5,
+            Math.min(
+              100,
+              result.average * 10
+            )
+          );
 
-          const color =
-            PLAYER_COLORS[result.person];
+        const color =
+          PLAYER_COLORS[result.person];
 
-          return `
-            <div class="compare-row">
+        return `
+          <div class="compare-row">
 
-              <div class="compare-head">
-                <strong>
-                  <span
-                    class="player-dot"
-                    style="
-                      background:${color};
-                    "
-                  ></span>
+            <div class="compare-head">
+              <strong>
+                <span
+                  class="player-dot"
+                  style="background:${color}"
+                ></span>
 
-                  ${index + 1}.
-                  ${escapeHtml(result.person)}
-                </strong>
+                ${index + 1}.
+                ${escapeHtml(result.person)}
+              </strong>
 
-                <span>
-                  ${result.average.toFixed(2)}
-                </span>
-              </div>
-
-              <div class="bar">
-                <div
-                  class="bar-fill"
-                  style="
-                    width:${width}%;
-                    background:${color};
-                  "
-                ></div>
-              </div>
-
-              <small>
-                ${result.count} měření
-                • minimum ${result.lowest}
-                • maximum ${result.highest}
-              </small>
-
+              <span>
+                ${result.average.toFixed(2)}
+              </span>
             </div>
-          `;
-        }
-      )
+
+            <div class="bar">
+              <div
+                class="bar-fill"
+                style="
+                  width:${width}%;
+                  background:${color};
+                "
+              ></div>
+            </div>
+
+            <small>
+              ${result.count} měření
+              • minimum ${result.lowest}
+              • maximum ${result.highest}
+            </small>
+
+          </div>
+        `;
+      })
       .join("");
 }
 
@@ -832,22 +703,15 @@ function renderComparison() {
 // =====================================================
 
 function renderMessage() {
-  if (!messageBox || !dateInput) {
-    return;
-  }
+  if (!messageBox || !dateInput) return;
 
   const date =
     dateInput.value;
 
   const values =
     ratings
-      .filter(
-        r =>
-          r.date === date
-      )
-      .map(r =>
-        Number(r.score)
-      )
+      .filter(r => r.date === date)
+      .map(r => Number(r.score))
       .filter(v =>
         Number.isFinite(v)
       );
@@ -871,8 +735,7 @@ function renderMessage() {
       (sum, value) =>
         sum + value,
       0
-    ) /
-    values.length;
+    ) / values.length;
 
   const rounded =
     Math.max(
@@ -898,20 +761,16 @@ function renderMessage() {
 }
 
 // =====================================================
-// GRAF – VÝVOJ VYHOŘENÍ
+// GRAF
 // =====================================================
 
 function renderChart() {
-  if (!chartCanvas) {
-    return;
-  }
+  if (!chartCanvas) return;
 
   const ctx =
     chartCanvas.getContext("2d");
 
-  if (!ctx) {
-    return;
-  }
+  if (!ctx) return;
 
   const year =
     getSelectedYear();
@@ -922,10 +781,6 @@ function renderChart() {
     chartCanvas.width,
     chartCanvas.height
   );
-
-  // ===================================================
-  // PŘÍPRAVA DAT PRO KAŽDÉHO HRÁČE
-  // ===================================================
 
   const playerData = {};
 
@@ -943,9 +798,7 @@ function renderChart() {
       const score =
         Number(r.score);
 
-      if (!Number.isFinite(score)) {
-        return;
-      }
+      if (!Number.isFinite(score)) return;
 
       if (!playerData[r.person][r.date]) {
         playerData[r.person][r.date] = [];
@@ -956,7 +809,6 @@ function renderChart() {
       );
     });
 
-  // Všechny dny
   const labels = [
     ...new Set(
       ratings
@@ -1008,10 +860,6 @@ function renderChart() {
     paddingTop -
     paddingBottom;
 
-  // ===================================================
-  // OSY
-  // ===================================================
-
   ctx.strokeStyle =
     "#cccccc";
 
@@ -1036,10 +884,6 @@ function renderChart() {
 
   ctx.stroke();
 
-  // ===================================================
-  // MŘÍŽKA 1–10
-  // ===================================================
-
   for (
     let i = 1;
     i <= 10;
@@ -1048,11 +892,8 @@ function renderChart() {
     const y =
       height -
       paddingBottom -
-      (
-        (i - 1) /
-        9
-      ) *
-      chartHeight;
+      ((i - 1) / 9) *
+        chartHeight;
 
     ctx.strokeStyle =
       "#eeeeee";
@@ -1084,10 +925,6 @@ function renderChart() {
     );
   }
 
-  // ===================================================
-  // KŘIVKA KAŽDÉHO HRÁČE
-  // ===================================================
-
   EMPLOYEES.forEach(person => {
     const color =
       PLAYER_COLORS[person];
@@ -1118,12 +955,8 @@ function renderChart() {
       color;
 
     ctx.lineWidth = 3;
-
-    ctx.lineJoin =
-      "round";
-
-    ctx.lineCap =
-      "round";
+    ctx.lineJoin = "round";
+    ctx.lineCap = "round";
 
     let drawing = false;
 
@@ -1150,25 +983,16 @@ function renderChart() {
           height -
           paddingBottom -
           (
-            (value - 1) /
-            9
+            (value - 1) / 9
           ) *
-          chartHeight;
+            chartHeight;
 
         if (!drawing) {
           ctx.beginPath();
-
-          ctx.moveTo(
-            x,
-            y
-          );
-
+          ctx.moveTo(x, y);
           drawing = true;
         } else {
-          ctx.lineTo(
-            x,
-            y
-          );
+          ctx.lineTo(x, y);
         }
       }
     );
@@ -1177,15 +1001,9 @@ function renderChart() {
       ctx.stroke();
     }
 
-    // =================================================
-    // BODY
-    // =================================================
-
     values.forEach(
       (value, index) => {
-        if (value === null) {
-          return;
-        }
+        if (value === null) return;
 
         const x =
           paddingLeft +
@@ -1203,10 +1021,9 @@ function renderChart() {
           height -
           paddingBottom -
           (
-            (value - 1) /
-            9
+            (value - 1) / 9
           ) *
-          chartHeight;
+            chartHeight;
 
         ctx.fillStyle =
           color;
@@ -1226,10 +1043,6 @@ function renderChart() {
     );
   });
 
-  // ===================================================
-  // POPISKY DATUMŮ
-  // ===================================================
-
   ctx.fillStyle =
     "#777777";
 
@@ -1243,7 +1056,7 @@ function renderChart() {
       1,
       Math.ceil(
         labels.length /
-        maxLabels
+          maxLabels
       )
     );
 
@@ -1265,7 +1078,7 @@ function renderChart() {
                 index /
                 (labels.length - 1)
               ) *
-              chartWidth
+                chartWidth
         );
 
       const shortDate =
@@ -1285,20 +1098,16 @@ function renderChart() {
 }
 
 // =====================================================
-// LEGENDA KE GRAFU
+// LEGENDA
 // =====================================================
 
 function renderChartLegend() {
-  if (!chartCanvas) {
-    return;
-  }
+  if (!chartCanvas) return;
 
   const chartContainer =
     chartCanvas.parentElement;
 
-  if (!chartContainer) {
-    return;
-  }
+  if (!chartContainer) return;
 
   let legend =
     chartContainer.querySelector(
@@ -1330,9 +1139,7 @@ function renderChartLegend() {
 
             <span
               class="legend-line"
-              style="
-                background:${color};
-              "
+              style="background:${color}"
             ></span>
 
             <span>
@@ -1346,7 +1153,7 @@ function renderChartLegend() {
 }
 
 // =====================================================
-// EXPORT CSV
+// CSV
 // =====================================================
 
 function exportCsv() {
@@ -1362,33 +1169,27 @@ function exportCsv() {
 
   ratings
     .slice()
-    .sort(
-      (a, b) => {
-        if (
-          a.date !== b.date
-        ) {
-          return String(a.date)
-            .localeCompare(
-              String(b.date)
-            );
-        }
-
-        if (
-          Number(a.hour) !==
-          Number(b.hour)
-        ) {
-          return (
-            Number(a.hour) -
-            Number(b.hour)
-          );
-        }
-
-        return String(a.person)
-          .localeCompare(
-            String(b.person)
-          );
+    .sort((a, b) => {
+      if (a.date !== b.date) {
+        return String(a.date).localeCompare(
+          String(b.date)
+        );
       }
-    )
+
+      if (
+        Number(a.hour) !==
+        Number(b.hour)
+      ) {
+        return (
+          Number(a.hour) -
+          Number(b.hour)
+        );
+      }
+
+      return String(a.person).localeCompare(
+        String(b.person)
+      );
+    })
     .forEach(r => {
       rows.push([
         r.year,
@@ -1418,8 +1219,7 @@ function exportCsv() {
   const blob =
     new Blob(
       [
-        "\ufeff" +
-        csv
+        "\ufeff" + csv
       ],
       {
         type:
@@ -1428,31 +1228,23 @@ function exportCsv() {
     );
 
   const url =
-    URL.createObjectURL(
-      blob
-    );
+    URL.createObjectURL(blob);
 
   const link =
-    document.createElement(
-      "a"
-    );
+    document.createElement("a");
 
   link.href = url;
 
   link.download =
     `pracovni-liga-${getSelectedYear()}.csv`;
 
-  document.body.appendChild(
-    link
-  );
+  document.body.appendChild(link);
 
   link.click();
 
   link.remove();
 
-  URL.revokeObjectURL(
-    url
-  );
+  URL.revokeObjectURL(url);
 
   if (status) {
     status.textContent =
@@ -1555,10 +1347,31 @@ function injectChatStyles() {
       color: #999;
     }
 
+    .chat-message-gif {
+      display: block;
+      max-width: 100%;
+      max-height: 300px;
+      margin-top: 7px;
+      border-radius: 10px;
+      object-fit: contain;
+    }
+
+    .chat-message-gif-link {
+      display: inline-block;
+      margin-top: 5px;
+      font-size: 11px;
+      color: #777;
+      text-decoration: none;
+    }
+
+    .chat-message-gif-link:hover {
+      text-decoration: underline;
+    }
+
     .chat-message-form {
       margin-top: 12px;
       display: grid;
-      grid-template-columns: 180px 1fr auto;
+      grid-template-columns: 180px 1fr auto auto;
       gap: 8px;
     }
 
@@ -1595,6 +1408,87 @@ function injectChatStyles() {
       cursor: not-allowed;
     }
 
+    .chat-gif-button {
+      background: #7c3aed !important;
+    }
+
+    .chat-gif-panel {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border-radius: 14px;
+      background: #f7f7f8;
+      border: 1px solid #e5e7eb;
+    }
+
+    .chat-gif-panel.open {
+      display: block;
+    }
+
+    .chat-gif-search {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .chat-gif-search input {
+      flex: 1;
+      min-height: 42px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      padding: 0 12px;
+      font: inherit;
+    }
+
+    .chat-gif-search button {
+      min-height: 42px;
+      border: none;
+      border-radius: 10px;
+      padding: 0 15px;
+      background: #111827;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .chat-gif-results {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      max-height: 330px;
+      overflow-y: auto;
+    }
+
+    .chat-gif-item {
+      border: none;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+      border-radius: 10px;
+      overflow: hidden;
+      aspect-ratio: 1;
+    }
+
+    .chat-gif-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .chat-gif-item:hover {
+      transform: scale(1.03);
+    }
+
+    .chat-gif-loading,
+    .chat-gif-error,
+    .chat-gif-empty {
+      padding: 20px;
+      text-align: center;
+      color: #777;
+      grid-column: 1 / -1;
+    }
+
     @media (max-width: 700px) {
       .chat-message-form {
         grid-template-columns: 1fr;
@@ -1607,16 +1501,22 @@ function injectChatStyles() {
       .work-chat-messages {
         height: 320px;
       }
+
+      .chat-gif-results {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .chat-gif-search {
+        flex-direction: column;
+      }
     }
   `;
 
-  document.head.appendChild(
-    style
-  );
+  document.head.appendChild(style);
 }
 
 // =====================================================
-// CHAT – VYTVOŘENÍ UI
+// CHAT – UI
 // =====================================================
 
 function createChatUI() {
@@ -1664,6 +1564,38 @@ function createChatUI() {
       </div>
     </div>
 
+    <div
+      id="chatGifPanel"
+      class="chat-gif-panel"
+    >
+      <div class="chat-gif-search">
+
+        <input
+          id="chatGifSearch"
+          type="text"
+          placeholder="Hledej GIF…"
+          maxlength="100"
+        />
+
+        <button
+          type="button"
+          id="chatGifSearchButton"
+        >
+          🔎 Hledat
+        </button>
+
+      </div>
+
+      <div
+        id="chatGifResults"
+        class="chat-gif-results"
+      >
+        <div class="chat-gif-empty">
+          🔥 Hledej GIF a vyber ho.
+        </div>
+      </div>
+    </div>
+
     <form
       id="chatForm"
       class="chat-message-form"
@@ -1674,11 +1606,13 @@ function createChatUI() {
         aria-label="Kdo píše"
       >
         ${EMPLOYEES
-          .map(person => `
-            <option value="${escapeHtml(person)}">
-              ${escapeHtml(person)}
-            </option>
-          `)
+          .map(
+            person => `
+              <option value="${escapeAttribute(person)}">
+                ${escapeHtml(person)}
+              </option>
+            `
+          )
           .join("")}
       </select>
 
@@ -1691,6 +1625,14 @@ function createChatUI() {
       />
 
       <button
+        type="button"
+        id="chatGifButton"
+        class="chat-gif-button"
+      >
+        🎞️ GIF
+      </button>
+
+      <button
         type="submit"
       >
         Odeslat
@@ -1699,8 +1641,6 @@ function createChatUI() {
     </form>
   `;
 
-  // Vložíme chat na konec hlavního obsahu.
-  // Pokud není main, vložíme před konec body.
   const main =
     document.querySelector("main");
 
@@ -1758,10 +1698,325 @@ function createChatUI() {
       sendChatMessage
     );
   }
+
+  const gifButton =
+    document.getElementById(
+      "chatGifButton"
+    );
+
+  if (gifButton) {
+    gifButton.addEventListener(
+      "click",
+      toggleGifPanel
+    );
+  }
+
+  const gifSearchButton =
+    document.getElementById(
+      "chatGifSearchButton"
+    );
+
+  if (gifSearchButton) {
+    gifSearchButton.addEventListener(
+      "click",
+      searchGifs
+    );
+  }
+
+  const gifSearch =
+    document.getElementById(
+      "chatGifSearch"
+    );
+
+  if (gifSearch) {
+    gifSearch.addEventListener(
+      "keydown",
+      event => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          searchGifs();
+        }
+      }
+    );
+  }
 }
 
 // =====================================================
-// CHAT – STATUS
+// GIF PANEL
+// =====================================================
+
+function toggleGifPanel() {
+  const panel =
+    document.getElementById(
+      "chatGifPanel"
+    );
+
+  if (!panel) return;
+
+  panel.classList.toggle("open");
+
+  if (
+    panel.classList.contains("open")
+  ) {
+    const input =
+      document.getElementById(
+        "chatGifSearch"
+      );
+
+    if (input) {
+      input.focus();
+    }
+  }
+}
+
+// =====================================================
+// GIF VYHLEDÁVÁNÍ
+// =====================================================
+//
+// Používáme veřejný endpoint Tenoru.
+// Nevyžaduje vlastní API klíč pro
+// jednoduché načítání výsledků přes
+// webový proxy endpoint.
+//
+// Pokud by Tenor endpoint později změnil // chování, chat samotný dál funguje.
+// =====================================================
+
+async function searchGifs() {
+  const input =
+    document.getElementById(
+      "chatGifSearch"
+    );
+
+  const results =
+    document.getElementById(
+      "chatGifResults"
+    );
+
+  if (!input || !results) {
+    return;
+  }
+
+  const query =
+    input.value.trim();
+
+  if (!query) {
+    results.innerHTML = `
+      <div class="chat-gif-empty">
+        🔎 Napiš, co chceš najít.
+      </div>
+    `;
+
+    return;
+  }
+
+  results.innerHTML = `
+    <div class="chat-gif-loading">
+      🔎 Hledám GIFy…
+    </div>
+  `;
+
+  try {
+    const url =
+      "https://tenor.googleapis.com/v2/search" +
+      "?q=" +
+      encodeURIComponent(query) +
+      "&key=LIVDSRZULELA" +
+      "&client_key=pracovni_liga" +
+      "&limit=20" +
+      "&media_filter=gif,tinygif";
+
+    const response =
+      await fetch(url);
+
+    if (!response.ok) {
+      throw new Error(
+        `HTTP ${response.status}`
+      );
+    }
+
+    const data =
+      await response.json();
+
+    const items =
+      data.results || [];
+
+    if (!items.length) {
+      results.innerHTML = `
+        <div class="chat-gif-empty">
+          😕 Nic jsem nenašel.
+        </div>
+      `;
+
+      return;
+    }
+
+    results.innerHTML =
+      items
+        .map(item => {
+          const media =
+            item.media_formats || {};
+
+          const gif =
+            media.gif ||
+            media.tinygif;
+
+          if (!gif || !gif.url) {
+            return "";
+          }
+
+          const gifUrl =
+            gif.url;
+
+          return `
+            <button
+              type="button"
+              class="chat-gif-item"
+              data-gif-url="${escapeAttribute(gifUrl)}"
+              title="Poslat GIF"
+            >
+              <img
+                src="${escapeAttribute(gifUrl)}"
+                alt="GIF"
+                loading="lazy"
+              />
+            </button>
+          `;
+        })
+        .join("");
+
+    document
+      .querySelectorAll(
+        ".chat-gif-item"
+      )
+      .forEach(button => {
+        button.addEventListener(
+          "click",
+          () => {
+            sendGif(
+              button.dataset.gifUrl
+            );
+          }
+        );
+      });
+
+  } catch (error) {
+    console.error(
+      "GIF SEARCH ERROR:",
+      error
+    );
+
+    results.innerHTML = `
+      <div class="chat-gif-error">
+        ❌ GIFy se nepodařilo načíst.
+        <br>
+        <small>
+          Může jít o dočasný problém služby.
+        </small>
+      </div>
+    `;
+  }
+}
+
+// =====================================================
+// GIF – ODESLÁNÍ
+// =====================================================
+
+async function sendGif(gifUrl) {
+  const personElement =
+    document.getElementById(
+      "chatPerson"
+    );
+
+  if (!personElement) {
+    return;
+  }
+
+  const person =
+    personElement.value;
+
+  if (
+    !EMPLOYEES.includes(person)
+  ) {
+    return;
+  }
+
+  if (!gifUrl) {
+    return;
+  }
+
+  setChatStatus(
+    "🎞️ Odesílám GIF…"
+  );
+
+  const {
+    data,
+    error
+  } = await supabase
+    .from("chat_messages")
+    .insert({
+      person,
+      message: "",
+      gif_url: gifUrl
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error(
+      "GIF SEND ERROR:",
+      error
+    );
+
+    alert(
+      "❌ GIF se nepodařilo odeslat:\n\n" +
+      error.message
+    );
+
+    setChatStatus(
+      "❌ Chyba při odesílání GIFu",
+      true
+    );
+
+    return;
+  }
+
+  if (
+    data &&
+    !chatMessages.some(
+      item =>
+        String(item.id) ===
+        String(data.id)
+    )
+  ) {
+    chatMessages.push(data);
+
+    chatMessages.sort(
+      (a, b) =>
+        new Date(a.created_at) -
+        new Date(b.created_at)
+    );
+
+    renderChatMessages();
+  }
+
+  const panel =
+    document.getElementById(
+      "chatGifPanel"
+    );
+
+  if (panel) {
+    panel.classList.remove(
+      "open"
+    );
+  }
+
+  setChatStatus(
+    "🟢 Chat připojen"
+  );
+}
+
+// =====================================================
+// CHAT STATUS
 // =====================================================
 
 function setChatStatus(
@@ -1773,9 +2028,7 @@ function setChatStatus(
       "chatStatus"
     );
 
-  if (!element) {
-    return;
-  }
+  if (!element) return;
 
   element.textContent =
     text;
@@ -1787,7 +2040,7 @@ function setChatStatus(
 }
 
 // =====================================================
-// CHAT – NAČTENÍ HISTORIE
+// CHAT – NAČTENÍ
 // =====================================================
 
 async function loadChatMessages() {
@@ -1796,9 +2049,7 @@ async function loadChatMessages() {
       "chatMessages"
     );
 
-  if (!messagesElement) {
-    return;
-  }
+  if (!messagesElement) return;
 
   setChatStatus(
     "Načítám historii…"
@@ -1857,7 +2108,7 @@ async function loadChatMessages() {
 }
 
 // =====================================================
-// CHAT – RENDER ZPRÁV
+// CHAT – RENDER
 // =====================================================
 
 function renderChatMessages(
@@ -1868,9 +2119,7 @@ function renderChatMessages(
       "chatMessages"
     );
 
-  if (!container) {
-    return;
-  }
+  if (!container) return;
 
   if (!chatMessages.length) {
     container.innerHTML = `
@@ -1922,6 +2171,17 @@ function renderChatMessages(
               )
             : "";
 
+        const gifUrl =
+          message.gif_url ||
+          "";
+
+        const hasGif =
+          Boolean(gifUrl);
+
+        const text =
+          message.message ||
+          "";
+
         return `
           <div class="chat-message">
 
@@ -1932,9 +2192,37 @@ function renderChatMessages(
               ${escapeHtml(person)}
             </div>
 
-            <div class="chat-message-text">
-              ${escapeHtml(message.message)}
-            </div>
+            ${
+              hasGif
+                ? `
+                  <img
+                    class="chat-message-gif"
+                    src="${escapeAttribute(gifUrl)}"
+                    alt="GIF"
+                    loading="lazy"
+                  />
+
+                  <a
+                    class="chat-message-gif-link"
+                    href="${escapeAttribute(gifUrl)}"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    🎞️ GIF
+                  </a>
+                `
+                : ""
+            }
+
+            ${
+              text
+                ? `
+                  <div class="chat-message-text">
+                    ${escapeHtml(text)}
+                  </div>
+                `
+                : ""
+            }
 
             <div class="chat-message-time">
               ${formattedTime}
@@ -1954,12 +2242,10 @@ function renderChatMessages(
 }
 
 // =====================================================
-// CHAT – ODESLÁNÍ ZPRÁVY
+// CHAT – TEXTOVÁ ZPRÁVA
 // =====================================================
 
-async function sendChatMessage(
-  event
-) {
+async function sendChatMessage(event) {
   event.preventDefault();
 
   const personElement =
@@ -2060,9 +2346,7 @@ async function sendChatMessage(
         String(data.id)
     )
   ) {
-    chatMessages.push(
-      data
-    );
+    chatMessages.push(data);
 
     chatMessages.sort(
       (a, b) =>
@@ -2085,13 +2369,11 @@ async function sendChatMessage(
 }
 
 // =====================================================
-// CHAT – REALTIME
+// REALTIME
 // =====================================================
 
 function setupChatRealtime() {
-  if (chatChannel) {
-    return;
-  }
+  if (chatChannel) return;
 
   chatChannel =
     supabase
@@ -2109,9 +2391,7 @@ function setupChatRealtime() {
           const message =
             payload.new;
 
-          if (!message) {
-            return;
-          }
+          if (!message) return;
 
           if (
             chatMessages.some(
@@ -2123,9 +2403,7 @@ function setupChatRealtime() {
             return;
           }
 
-          chatMessages.push(
-            message
-          );
+          chatMessages.push(message);
 
           chatMessages.sort(
             (a, b) =>
@@ -2137,9 +2415,7 @@ function setupChatRealtime() {
             chatMessages.length > 500
           ) {
             chatMessages =
-              chatMessages.slice(
-                -500
-              );
+              chatMessages.slice(-500);
           }
 
           renderChatMessages();
@@ -2150,9 +2426,10 @@ function setupChatRealtime() {
         }
       )
       .subscribe(
-        status => {
+        channelStatus => {
           if (
-            status === "SUBSCRIBED"
+            channelStatus ===
+            "SUBSCRIBED"
           ) {
             setChatStatus(
               "🟢 Chat připojen"
@@ -2160,8 +2437,10 @@ function setupChatRealtime() {
           }
 
           if (
-            status === "CHANNEL_ERROR" ||
-            status === "TIMED_OUT"
+            channelStatus ===
+              "CHANNEL_ERROR" ||
+            channelStatus ===
+              "TIMED_OUT"
           ) {
             setChatStatus(
               "🟡 Realtime nedostupný – kontroluji automaticky",
@@ -2173,7 +2452,7 @@ function setupChatRealtime() {
 }
 
 // =====================================================
-// CHAT – FALLBACK AUTOMATICKÉ NAČÍTÁNÍ
+// FALLBACK CHAT
 // =====================================================
 
 async function refreshChatSilently() {
@@ -2218,8 +2497,7 @@ async function refreshChatSilently() {
       : null;
 
   if (
-    oldLastId !== newLastId ||
-    chatMessages.length === 0
+    oldLastId !== newLastId
   ) {
     renderChatMessages();
   }
@@ -2230,13 +2508,11 @@ async function refreshChatSilently() {
 }
 
 // =====================================================
-// CHAT – START
+// START CHATU
 // =====================================================
 
 async function initChat() {
-  if (chatInitialized) {
-    return;
-  }
+  if (chatInitialized) return;
 
   chatInitialized = true;
 
@@ -2246,8 +2522,6 @@ async function initChat() {
 
   setupChatRealtime();
 
-  // Záloha, pokud Supabase Realtime
-  // na projektu není zapnutý.
   setInterval(
     refreshChatSilently,
     10000
@@ -2255,7 +2529,7 @@ async function initChat() {
 }
 
 // =====================================================
-// ZMĚNA DATA
+// EVENTY
 // =====================================================
 
 if (dateInput) {
@@ -2265,10 +2539,6 @@ if (dateInput) {
   );
 }
 
-// =====================================================
-// EXPORT
-// =====================================================
-
 if (exportButton) {
   exportButton.addEventListener(
     "click",
@@ -2277,7 +2547,7 @@ if (exportButton) {
 }
 
 // =====================================================
-// START
+// START APLIKACE
 // =====================================================
 
 if (
